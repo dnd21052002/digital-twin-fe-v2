@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { apiRequest } from '../../lib/api/client';
-import { normalizeList } from '../../lib/api/normalizers';
+import { normalizeCapacitySummary, normalizeKpiList, normalizeList } from '../../lib/api/normalizers';
+import type { CapacitySummary, KpiData, MetricThreshold } from '../../lib/api/types';
 
 export type TelemetryRange = '1h' | '6h' | '24h';
-export type LatestMetric = { key: string; name: string; value: number | string | boolean | null; unit?: string; quality?: number | string; timestamp?: string; threshold?: number; raw?: unknown };
+export type LatestMetric = { key: string; name: string; value: number | string | boolean | null; unit?: string; quality?: number | string; timestamp?: string; threshold?: number; thresholds?: MetricThreshold; raw?: unknown };
 export type LatestMetrics = { assetId: string; items: LatestMetric[]; raw?: unknown };
 export type TimeseriesPoint = { timestamp: string; value: number | null; raw?: unknown };
 export type Timeseries = { assetId: string; metricKey: string; unit?: string; from?: string; to?: string; interval?: string; points: TimeseriesPoint[]; raw?: unknown };
@@ -22,20 +23,31 @@ function firstString(source: Record<string, unknown>, keys: string[], fallback =
 }
 function numeric(value: unknown): number | undefined { return typeof value === 'number' && Number.isFinite(value) ? value : typeof value === 'string' && value.trim() && Number.isFinite(Number(value)) ? Number(value) : undefined; }
 function scalar(value: unknown): LatestMetric['value'] { return typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean' || value === null ? value : null; }
+function numericThresholds(source: Record<string, unknown> | undefined): MetricThreshold | undefined {
+  if (!source) return undefined;
+  const wh = numeric(source.warnHigh ?? source.warn_high ?? source.warningHigh ?? source.warning_high);
+  const ch = numeric(source.critHigh ?? source.crit_high ?? source.criticalHigh ?? source.critical_high);
+  const wl = numeric(source.warnLow ?? source.warn_low ?? source.warningLow ?? source.warning_low);
+  const cl = numeric(source.critLow ?? source.crit_low ?? source.criticalLow ?? source.critical_low);
+  if (wh === undefined && ch === undefined && wl === undefined && cl === undefined) return undefined;
+  return { warnHigh: wh, critHigh: ch, warnLow: wl, critLow: cl };
+}
 
 function normalizeLatestMetric(value: unknown, index: number): LatestMetric {
-  const record = isRecord(value) ? value : {};
+  const record: Record<string, unknown> = isRecord(value) ? value : {};
   const key = firstString(record, ['key', 'metricKey', 'metric_key', 'name', 'id'], `metric-${index + 1}`);
   const rawValue = 'value' in record ? record.value : value;
   const metric: LatestMetric = { key, name: firstString(record, ['name', 'label', 'title', 'key', 'metricKey', 'metric_key'], key), value: scalar(rawValue), raw: value };
   const unit = firstString(record, ['unit', 'uom']);
   const timestamp = firstString(record, ['timestamp', 'time', 'ts', 'recordedAt', 'recorded_at']);
   const threshold = numeric(record.threshold ?? record.alarmThreshold ?? record.alarm_threshold);
+  const thresholds = numericThresholds((record.thresholds ?? record.metricThreshold ?? record.metric_threshold) as Record<string, unknown> | undefined);
   const quality = record.quality ?? record.qualityCode ?? record.quality_code;
   if (unit) metric.unit = unit;
   if (timestamp) metric.timestamp = timestamp;
   if (typeof quality === 'number' || typeof quality === 'string') metric.quality = quality;
   if (threshold !== undefined) metric.threshold = threshold;
+  if (thresholds) metric.thresholds = thresholds;
   return metric;
 }
 function objectMetrics(value: unknown): LatestMetric[] {
@@ -67,4 +79,18 @@ export function useLatestMetricsQuery(assetId: string | null | undefined) { retu
 export function useTimeseriesQuery(assetId: string | null | undefined, metricKey: string | null | undefined, range: TelemetryRange) {
   const window = rangeToWindow(range);
   return useQuery<Timeseries>({ queryKey: ['telemetry', 'timeseries', assetId, metricKey, range], queryFn: async () => { const params = new URLSearchParams({ metric: metricKey ?? '', from: window.from, to: window.to, limit: '1000' }); return normalizeTimeseries(await apiRequest<unknown>(`/assets/${assetId}/metrics/timeseries?${params.toString()}`)); }, enabled: Boolean(assetId && metricKey) });
+}
+
+export function useKpisLatestQuery() {
+  return useQuery<KpiData[]>({
+    queryKey: ['kpis', 'latest'],
+    queryFn: async () => normalizeKpiList(await apiRequest<unknown>('/kpis/latest')),
+  });
+}
+
+export function useCapacitySummaryQuery() {
+  return useQuery<CapacitySummary>({
+    queryKey: ['capacity', 'summary'],
+    queryFn: async () => normalizeCapacitySummary(await apiRequest<unknown>('/capacity/summary')),
+  });
 }

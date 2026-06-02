@@ -8,3 +8,4 @@ export * from './LoadingState';
 export * from './Drawer';
 export * from './DataTable';
 export * from './Tabs';
+export * from './ProgressBar';

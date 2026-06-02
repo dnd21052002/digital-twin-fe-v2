@@ -3,7 +3,9 @@ import type {
   AlarmSummary,
   AssetDetail,
   AssetSummary,
+  CapacitySummary,
   FacilityNode,
+  KpiData,
   LatestMetricsResponse,
   LoginResponse,
   MetricPoint,
@@ -277,4 +279,70 @@ export function normalizeSopResponse(value: unknown): SopResponse {
     steps: normalizeList(stepsInput).map(normalizeSopStep),
     raw: value,
   };
+}
+
+function firstNumber(source: Record<string, unknown>, keys: string[], fallback = 0): number {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return fallback;
+}
+
+export function normalizeCapacityItem(value: unknown) {
+  const record = isRecord(value) ? value : {};
+  return {
+    used: firstNumber(record, ['used', 'usedVal', 'consumed'], 0),
+    total: firstNumber(record, ['total', 'totalVal', 'capacity'], 0),
+    unit: firstString(record, ['unit', 'uom'], ''),
+  };
+}
+
+export function normalizeCapacitySummary(value: unknown): CapacitySummary {
+  const record = isRecord(value) ? value : {};
+  return {
+    power: isRecord(record.power) ? normalizeCapacityItem(record.power) : { used: 0, total: 0, unit: 'kW' },
+    cooling: isRecord(record.cooling) ? normalizeCapacityItem(record.cooling) : { used: 0, total: 0, unit: 'kW' },
+    space: isRecord(record.space) ? normalizeCapacityItem(record.space) : { used: 0, total: 0, unit: 'm²' },
+    raw: value,
+  };
+}
+
+function normalizeSparkline(value: unknown): { timestamp: string; value: number }[] {
+  const items = normalizeList(value);
+  return items.map((item) => {
+    const record = isRecord(item) ? item : {};
+    return {
+      timestamp: firstString(record, ['timestamp', 'time', 'ts'], ''),
+      value: firstNumber(record, ['value', 'val'], 0),
+    };
+  });
+}
+
+export function normalizeKpiData(value: unknown): KpiData {
+  const record = isRecord(value) ? value : {};
+  const id = firstString(record, ['key', 'id', 'kpiKey', 'metric'], 'kpi');
+  const statusStr = firstString(record, ['status', 'state']);
+  const status: KpiData['status'] =
+    statusStr === 'good' || statusStr === 'warning' || statusStr === 'critical' ? statusStr : undefined;
+  const kpi: KpiData = {
+    key: id,
+    name: firstString(record, ['name', 'label', 'title'], id),
+    value: firstNumber(record, ['value', 'val'], 0),
+    unit: firstString(record, ['unit', 'uom'], ''),
+    target: firstNumber(record, ['target', 'targetVal', 'goal'], 0),
+    raw: value,
+  };
+  if (status) kpi.status = status;
+  const sparkline = record.sparkline ?? record.history ?? record.trend ?? record.points;
+  if (sparkline) kpi.sparkline = normalizeSparkline(sparkline);
+  return kpi;
+}
+
+export function normalizeKpiList(value: unknown): KpiData[] {
+  return normalizeList(value).map(normalizeKpiData);
 }

@@ -144,3 +144,34 @@ export interface SopResponse {
   steps: SopStep[];
   raw?: unknown;
 }
+
+export interface MetricThreshold {
+  warnHigh?: number | undefined;
+  critHigh?: number | undefined;
+  warnLow?: number | undefined;
+  critLow?: number | undefined;
+}
+
+export interface KpiData {
+  key: string;
+  name: string;
+  value: number;
+  unit: string;
+  target: number;
+  status?: 'good' | 'warning' | 'critical';
+  sparkline?: { timestamp: string; value: number }[];
+  raw?: unknown;
+}
+
+export interface CapacityItem {
+  used: number;
+  total: number;
+  unit: string;
+}
+
+export interface CapacitySummary {
+  power: CapacityItem;
+  cooling: CapacityItem;
+  space: CapacityItem;
+  raw?: unknown;
+}
