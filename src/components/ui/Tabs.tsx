@@ -1,8 +1,8 @@
-import type { KeyboardEvent, ReactNode } from 'react';
+import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 
 export type TabItem = {
   id: string;
-  label: string;
+  label: ReactNode;
   content: ReactNode;
 };
 
@@ -13,6 +13,7 @@ export type TabsProps = {
 };
 
 export function Tabs({ tabs, selectedId, onChange }: TabsProps) {
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const selected = tabs.find((tab) => tab.id === selectedId) ?? tabs[0];
 
   if (!selected) return null;
@@ -28,7 +29,10 @@ export function Tabs({ tabs, selectedId, onChange }: TabsProps) {
           ? (index + 1) % tabs.length
           : (index - 1 + tabs.length) % tabs.length;
     const nextTab = tabs[nextIndex];
-    if (nextTab) onChange(nextTab.id);
+    if (!nextTab) return;
+
+    onChange(nextTab.id);
+    tabRefs.current[nextIndex]?.focus();
   };
 
   return (
@@ -38,6 +42,7 @@ export function Tabs({ tabs, selectedId, onChange }: TabsProps) {
           const isSelected = tab.id === selected.id;
           return (
             <button
+              ref={(element) => { tabRefs.current[index] = element; }}
               key={tab.id}
               id={`tab-${tab.id}`}
               type="button"
