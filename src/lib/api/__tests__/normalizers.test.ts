@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   categoryToLabel,
   normalizeCategory,
+  normalizeAuthTokens,
   normalizeList,
   normalizeSceneManifest,
 } from '../normalizers';
@@ -21,6 +22,22 @@ describe('normalizers', () => {
     expect(normalizeCategory({ name: 'Fire Safety', id: 'fire' })).toBe('fire_safety');
     expect(categoryToLabel({ label: 'Critical Alarms' })).toBe('Critical Alarms');
     expect(categoryToLabel(null)).toBe('Unknown');
+  });
+
+  it('normalizes auth tokens from root nested tokens object', () => {
+    expect(
+      normalizeAuthTokens({
+        tokens: { accessToken: 'access-root', refreshToken: 'refresh-root' },
+      }),
+    ).toEqual({ accessToken: 'access-root', refreshToken: 'refresh-root' });
+  });
+
+  it('normalizes auth tokens from data nested tokens object with snake case fields', () => {
+    expect(
+      normalizeAuthTokens({
+        data: { tokens: { access_token: 'access-data', refresh_token: 'refresh-data' } },
+      }),
+    ).toEqual({ accessToken: 'access-data', refreshToken: 'refresh-data' });
   });
 
   it('normalizes scene manifests from ideal assets or scene mesh texture shape', () => {

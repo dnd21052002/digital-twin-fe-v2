@@ -61,8 +61,15 @@ export function normalizeUser(value: unknown): User | undefined {
 export function normalizeAuthTokens(value: unknown) {
   const root = isRecord(value) ? value : {};
   const data = isRecord(root.data) ? root.data : root;
-  const accessToken = firstString(data, ['accessToken', 'access_token', 'token', 'jwt']);
-  const refreshToken = firstString(data, ['refreshToken', 'refresh_token']);
+  const sources = [data.tokens, root.tokens, data, root].filter(isRecord);
+  const accessToken = sources.reduce(
+    (token, source) => token || firstString(source, ['accessToken', 'access_token', 'token', 'jwt']),
+    '',
+  );
+  const refreshToken = sources.reduce(
+    (token, source) => token || firstString(source, ['refreshToken', 'refresh_token']),
+    '',
+  );
   return refreshToken ? { accessToken, refreshToken } : { accessToken };
 }
 
