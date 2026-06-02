@@ -1,5 +1,45 @@
 # Frontend v2 Implementation Plan
 
+## Recommended Redesign Plan
+
+### Phase UI-1 — Design System Cleanup
+
+- tokens
+- reusable panel/card/badge/button/table states
+- remove raw one-off styles
+
+### Phase UI-2 — Command Center Shell
+
+- left nav rail
+- top status bar
+- central 3D workspace
+- right inspector
+- global drawer system
+
+### Phase UI-3 — 3D Realism
+
+- procedural data-center layout
+- row/aisle/rack grouping
+- category-specific geometry
+- alarm beacons/layers
+
+### Phase UI-4 — Alarms + Telemetry Productization
+
+- full alarm center
+- full telemetry center
+- chart thresholds/anomaly markers
+- detail/timeline/SOP placeholders
+
+### Phase UI-5 — Model Pipeline
+
+- GLTF registry
+- category model mapping
+- instancing/LOD/perf
+
+Recommended order: **UI-1 → UI-4 first, then UI-5**. Model quality matters, but information architecture and operator workflows matter more.
+
+## Detailed Build Plan
+
 ## Phase V2-0 — Repository Setup
 
 - Scaffold Vite React TypeScript app.
