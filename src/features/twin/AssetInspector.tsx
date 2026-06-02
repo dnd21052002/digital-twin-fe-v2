@@ -4,6 +4,7 @@ import { LoadingState } from '../../components/ui/LoadingState';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { displayText } from '../../lib/display';
 import { useAssetQuery } from './queries';
+import { RelatedAlarms } from '../alarms/RelatedAlarms';
 import { useViewerStore } from './viewerStore';
 
 function Field({ label, value }: { label: string; value: unknown }) {
@@ -38,6 +39,7 @@ export function AssetInspector() {
         <Field label="Model" value={asset.model} />
         <Field label="Serial" value={asset.serial} />
       </dl>
+      <RelatedAlarms assetId={asset.id} />
     </div>
   );
 }

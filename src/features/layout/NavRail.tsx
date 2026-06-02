@@ -1,11 +1,19 @@
 import { NavLink } from 'react-router-dom';
 
+import { useAlarmsQuery } from '../alarms/queries';
+
 const links = [
   { to: '/twin', label: 'Twin' },
-  { to: '/alarms', label: 'Alarms' },
+  { to: '/alarms', label: 'Alarms', badge: true },
   { to: '/telemetry', label: 'Telemetry' },
   { to: '/assets', label: 'Assets' },
 ];
+
+function AlarmBadge() {
+  const { data: alarms = [] } = useAlarmsQuery({ status: 'open' });
+  if (alarms.length === 0) return null;
+  return <span aria-label={`${alarms.length} open alarms`} className="rounded-full bg-critical px-2 py-0.5 text-xs font-bold text-white">{alarms.length}</span>;
+}
 
 export function NavRail() {
   return (
@@ -17,14 +25,15 @@ export function NavRail() {
             <NavLink
               to={link.to}
               className={({ isActive }) =>
-                `block rounded-lg border px-3 py-2 text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] ${
+                `flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] ${
                   isActive
                     ? 'border-[color:var(--primary)] bg-[color:var(--primary-muted)] text-text-primary'
                     : 'border-transparent text-text-secondary hover:border-border-strong hover:bg-white/5 hover:text-text-primary'
                 }`
               }
             >
-              {link.label}
+              <span>{link.label}</span>
+              {link.badge && <AlarmBadge />}
             </NavLink>
           </li>
         ))}

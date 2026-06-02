@@ -8,6 +8,7 @@ import { SceneCanvas } from '../scene/SceneCanvas';
 import { AssetSearch } from '../assets/AssetSearch';
 import { AssetInspector } from './AssetInspector';
 import { FacilityTree } from './FacilityTree';
+import { useAlarmsQuery } from '../alarms/queries';
 import { useAssetsQuery, useSceneManifestQuery } from './queries';
 import { SceneSelector } from './SceneSelector';
 import { useViewerStore, type ViewerLayer } from './viewerStore';
@@ -35,6 +36,8 @@ function Workspace() {
   const selectAsset = useViewerStore((state) => state.selectAsset);
   const { data: manifest, isLoading, isError, error, refetch } = useSceneManifestQuery(selectedSceneId);
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError, error: assetsErrorValue, refetch: refetchAssets } = useAssetsQuery();
+  const { data: alarms = [] } = useAlarmsQuery({ status: 'open' });
+  const sceneAlarms = alarms.filter((alarm): alarm is typeof alarm & { assetId: string } => Boolean(alarm.assetId));
 
   if (!selectedSceneId) return <EmptyState title="No scene selected" message="Choose a scene to load the digital twin workspace." />;
   if (isLoading || assetsLoading) return <LoadingState label="Loading scene workspace" />;
@@ -49,7 +52,7 @@ function Workspace() {
         <h1 className="mt-3 text-2xl font-semibold text-text-primary">{displayText(manifest.name, selectedSceneId)}</h1>
         <p className="mt-2 text-sm text-text-secondary">Procedural data-center scene from manifest positions and asset location data.</p>
       </div>
-      <SceneCanvas manifest={manifest} assets={assets} selectedAssetId={selectedAssetId} activeLayers={activeLayers} onAssetSelect={selectAsset} />
+      <SceneCanvas manifest={manifest} assets={assets} selectedAssetId={selectedAssetId} activeLayers={activeLayers} alarms={sceneAlarms} onAssetSelect={selectAsset} />
     </div>
   );
 }
