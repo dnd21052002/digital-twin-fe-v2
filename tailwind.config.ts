@@ -7,9 +7,11 @@ export default {
       colors: {
         bg: {
           base: 'var(--bg-base)',
+          page: 'var(--bg-page)',
           surface: 'var(--bg-surface)',
           elevated: 'var(--bg-elevated)',
           panel: 'var(--bg-panel)',
+          'panel-soft': 'var(--bg-panel-soft)',
         },
         border: {
           subtle: 'var(--border-subtle)',

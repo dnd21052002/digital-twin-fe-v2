@@ -11,9 +11,9 @@ import { useViewerStore } from './viewerStore';
 
 function Field({ label, value }: { label: string; value: unknown }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-surface p-3">
-      <dt className="text-xs uppercase tracking-wide text-text-muted">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-text-primary">{displayText(value)}</dd>
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3">
+      <dt className="text-[0.65rem] uppercase tracking-[0.16em] text-text-muted">{label}</dt>
+      <dd className="mt-1 font-mono text-sm font-medium text-text-primary">{displayText(value)}</dd>
     </div>
   );
 }
@@ -30,10 +30,11 @@ export function AssetInspector() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary">{displayText(asset.name, asset.id)}</h3>
-        <p className="text-sm text-text-secondary">{displayText(asset.tag, asset.id)}</p>
-        <div className="mt-2"><StatusBadge status={asset.status} /></div>
+      <div className="rounded-2xl border border-[color:var(--border-accent)] bg-primary-muted p-4">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-primary">Selected asset</p>
+        <h3 className="mt-2 text-xl font-semibold text-text-primary">{displayText(asset.name, asset.id)}</h3>
+        <p className="mt-1 font-mono text-sm text-text-secondary">{displayText(asset.tag, asset.id)}</p>
+        <div className="mt-3"><StatusBadge status={asset.status} /></div>
       </div>
       <dl className="grid gap-3">
         <Field label="Category" value={asset.category} />
@@ -42,7 +43,7 @@ export function AssetInspector() {
         <Field label="Model" value={asset.model} />
         <Field label="Serial" value={asset.serial} />
       </dl>
-      <section className="rounded-xl border border-border-subtle bg-bg-surface p-3" aria-label="Latest telemetry summary">
+      <section className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4" aria-label="Latest telemetry summary">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h4 className="text-sm font-semibold text-text-primary">Latest telemetry</h4>
           <a className="text-xs font-semibold text-primary hover:underline" href="/telemetry">Open trend</a>

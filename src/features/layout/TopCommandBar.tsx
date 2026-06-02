@@ -21,18 +21,21 @@ export function TopCommandBar() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-bg-panel px-5 shadow-lg shadow-black/20">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[color:var(--primary)]">Twin@P.CN Command Center</p>
-        <p className="text-xs text-text-secondary">API {apiBase}</p>
+    <header className="flex h-[4.5rem] items-center justify-between border-b border-white/[0.06] bg-bg-panel-soft px-6 shadow-2xl shadow-black/20 backdrop-blur">
+      <div className="flex items-center gap-4">
+        <div className="grid h-10 w-10 place-items-center rounded-xl border border-[color:var(--border-accent)] bg-primary-muted font-mono text-sm font-bold text-primary shadow-lg shadow-sky-950/30">DT</div>
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-text-primary">Twin@P.CN Command Center</p>
+          <p className="mt-1 text-xs text-text-secondary">API {apiBase}</p>
+        </div>
       </div>
-      <div className="flex items-center gap-4 text-sm">
-        <span className="rounded-full border border-border-subtle bg-white/5 px-3 py-1 text-text-secondary">Incidents 0</span>
-        <span className="text-text-secondary">{operatorName()}</span>
+      <div className="flex items-center gap-3 text-sm">
+        <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-text-secondary">Incidents 0</span>
+        <span className="hidden rounded-full border border-white/[0.08] bg-bg-elevated px-3 py-1.5 text-xs text-text-secondary md:inline-flex">{operatorName()}</span>
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded-lg border border-border-strong px-3 py-2 font-semibold text-text-primary hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)]"
+          className="rounded-lg border border-white/[0.10] px-3 py-2 text-xs font-semibold text-text-primary transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)]"
         >
           Logout
         </button>

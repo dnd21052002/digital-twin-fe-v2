@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 
-import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -28,7 +27,7 @@ export function AssetSearch({ onSelect, compact }: AssetSearchProps) {
   return (
     <div className="space-y-3">
       <input
-        className="w-full rounded-md border border-border-subtle bg-bg-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+        className="w-full rounded-xl border border-white/[0.08] bg-bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-[color:var(--border-accent)] focus:ring-2 focus:ring-primary/20"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search tag, name, category"
@@ -37,15 +36,20 @@ export function AssetSearch({ onSelect, compact }: AssetSearchProps) {
       {filtered.length === 0 ? (
         <EmptyState title="No matching assets" message="Try a different tag, name, or category." />
       ) : (
-        <div className={compact ? 'max-h-72 space-y-2 overflow-auto' : 'space-y-2'}>
+        <div className={compact ? 'max-h-[19rem] space-y-1.5 overflow-auto pr-1' : 'space-y-2'}>
           {filtered.map((asset) => (
-            <Button key={asset.id} className="w-full justify-between text-left" variant="ghost" onClick={() => { selectAsset(asset.id); onSelect?.(asset); }}>
-              <span>
-                <span className="block text-text-primary">{displayText(asset.tag ?? asset.name, asset.id)}</span>
-                <span className="block text-xs text-text-secondary">{displayText(asset.name)} · {displayText(asset.category)}</span>
+            <button
+              key={asset.id}
+              type="button"
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-white/[0.02] px-3 py-2.5 text-left transition hover:border-white/[0.08] hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              onClick={() => { selectAsset(asset.id); onSelect?.(asset); }}
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-mono text-xs font-semibold text-text-primary">{displayText(asset.tag ?? asset.name, asset.id)}</span>
+                <span className="mt-0.5 block truncate text-xs text-text-secondary">{displayText(asset.name)} · {displayText(asset.category)}</span>
               </span>
               <StatusBadge status={asset.status} />
-            </Button>
+            </button>
           ))}
         </div>
       )}

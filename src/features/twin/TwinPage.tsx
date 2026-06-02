@@ -91,7 +91,7 @@ function Workspace() {
   const { data: alarms = [] } = useAlarmsQuery({ status: 'open' });
   const sceneAlarms = alarms.filter((alarm): alarm is typeof alarm & { assetId: string } => Boolean(alarm.assetId));
 
-  if (!selectedSceneId) return <EmptyState title="No scene selected" message="Choose a scene to load the digital twin workspace." />;
+  if (!selectedSceneId) return <EmptyState title="3D Digital Twin Workspace" message="Choose a scene to load the digital twin workspace." />;
   if (isLoading || assetsLoading) return <LoadingState label="Loading scene workspace" />;
   if (isError) return <ErrorState title="Scene manifest unavailable" message={error instanceof Error ? error.message : 'Unable to load scene manifest.'} onRetry={() => void refetch()} />;
   if (assetsError) return <ErrorState title="Assets unavailable" message={assetsErrorValue instanceof Error ? assetsErrorValue.message : 'Unable to load assets.'} onRetry={() => void refetchAssets()} />;
@@ -99,10 +99,16 @@ function Workspace() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-primary">3D Digital Twin Workspace</p>
-        <h1 className="mt-3 text-2xl font-semibold text-text-primary">{displayText(manifest.name, selectedSceneId)}</h1>
-        <p className="mt-2 text-sm text-text-secondary">Procedural data-center scene from manifest positions and asset location data.</p>
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.34em] text-primary">3D Digital Twin Workspace</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-text-primary">{displayText(manifest.name, selectedSceneId)}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">Procedural command scene generated from manifest positions, asset metadata, and fallback rack layout.</p>
+        </div>
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-right">
+          <p className="text-[0.65rem] uppercase tracking-[0.18em] text-text-muted">Selected asset</p>
+          <p className="mt-1 font-mono text-sm font-semibold text-primary">{displayText(selectedAssetId, 'None')}</p>
+        </div>
       </div>
       <SceneCanvas manifest={manifest} assets={assets} selectedAssetId={selectedAssetId} activeLayers={activeLayers} alarms={sceneAlarms} onAssetSelect={selectAsset} />
     </div>
@@ -112,26 +118,26 @@ function Workspace() {
 export function TwinPage() {
   useTwinDeepLinks();
   return (
-    <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
+    <div className="grid gap-5 xl:grid-cols-[330px_minmax(680px,1fr)_380px]">
       <Panel title="Twin controls" subtitle="Scene, facility, assets, layers" className="space-y-5">
         <SceneSelector />
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-text-primary">Facility</h3>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Facility</h3>
           <FacilityTree />
         </div>
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-text-primary">Assets</h3>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Assets</h3>
           <AssetSearch compact />
         </div>
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-text-primary">Layers</h3>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Layers</h3>
           <LayerToggles />
         </div>
       </Panel>
-      <Panel title="3D Digital Twin Workspace" subtitle="Procedural command scene">
+      <Panel>
         <Workspace />
       </Panel>
-      <Panel title="Asset inspector" subtitle="Selected asset details">
+      <Panel title="Inspector" subtitle="Selected asset context">
         <AssetInspector />
       </Panel>
     </div>
