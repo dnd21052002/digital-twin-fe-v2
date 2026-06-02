@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App', () => {
-  it('renders the command center splash shell', () => {
+  it('renders login by default when unauthenticated', () => {
+    window.localStorage.clear();
+
     render(<App />);
 
-    expect(
-      screen.getByRole('heading', { name: /digital twin command center/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
   });
 });
