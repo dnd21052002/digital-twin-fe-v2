@@ -21,6 +21,10 @@ function firstString(source: Record<string, unknown>, keys: string[], fallback =
     const value = source[key];
     if (typeof value === 'string' && value.trim()) return value;
     if (typeof value === 'number') return String(value);
+    if (isRecord(value)) {
+      const nested = firstString(value, ['label', 'name', 'title', 'id']);
+      if (nested) return nested;
+    }
   }
   return fallback;
 }
@@ -126,7 +130,9 @@ export function normalizeAssetSummary(value: unknown): AssetSummary {
   const record = isRecord(value) ? value : {};
   const id = firstString(record, ['id', 'assetId', 'asset_id'], 'asset');
   const asset: AssetSummary = { id, name: firstString(record, ['name', 'title'], id), category: normalizeCategory(record.category), raw: value };
+  const tag = firstString(record, ['tag', 'assetTag', 'asset_tag', 'code']);
   const status = firstString(record, ['status', 'state']);
+  if (tag) asset.tag = tag;
   if (status) asset.status = status;
   return asset;
 }
@@ -136,14 +142,20 @@ export function normalizeAssetDetail(value: unknown): AssetDetail {
   const record = isRecord(value) ? value : {};
   const detail: AssetDetail = { ...summary };
   const description = firstString(record, ['description']);
+  const location = firstString(record, ['location', 'site', 'area']);
+  const model = firstString(record, ['model', 'modelNumber', 'model_number']);
+  const serial = firstString(record, ['serial', 'serialNumber', 'serial_number']);
   if (description) detail.description = description;
+  if (location) detail.location = location;
+  if (model) detail.model = model;
+  if (serial) detail.serial = serial;
   if (isRecord(record.metadata)) detail.metadata = record.metadata;
   return detail;
 }
 
 export function normalizeFacilityNode(value: unknown): FacilityNode {
   const record = isRecord(value) ? value : {};
-  const id = firstString(record, ['id', 'nodeId', 'node_id'], 'facility');
+  const id = firstString(record, ['id', 'nodeId', 'node_id', 'assetId', 'asset_id'], 'facility');
   const node: FacilityNode = { id, name: firstString(record, ['name', 'title'], id), category: normalizeCategory(record.category), children: normalizeList(record.children).map(normalizeFacilityNode), raw: value };
   const type = firstString(record, ['type']);
   const parentId = firstString(record, ['parentId', 'parent_id']);

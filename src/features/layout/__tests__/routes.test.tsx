@@ -1,20 +1,29 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { routes } from '../../../router';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY } from '../../auth/authStorage';
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<RouterProvider router={router} />);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
   return router;
 }
 
 describe('command center routes', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
   });
+
+  afterEach(() => vi.unstubAllGlobals());
 
   it('redirects protected twin workspace to login when no token exists', async () => {
     renderAt('/twin');
@@ -31,7 +40,7 @@ describe('command center routes', () => {
 
     expect(await screen.findByRole('banner')).toHaveTextContent('Twin@P.CN Command Center');
     expect(screen.getByRole('navigation', { name: /primary command/i })).toBeInTheDocument();
-    expect(screen.getByRole('main')).toHaveTextContent(/command workspace awaiting core data/i);
+    expect(screen.getByRole('main')).toHaveTextContent(/3D Digital Twin Workspace/i);
     expect(screen.getByText(/API http:\/\/localhost:3000\/api\/v1/i)).toBeInTheDocument();
     expect(screen.getByText(/Ada Lovelace/i)).toBeInTheDocument();
   });

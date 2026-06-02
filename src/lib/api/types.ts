@@ -54,6 +54,7 @@ export interface SceneSummary {
 export interface AssetSummary {
   id: string;
   name: string;
+  tag?: string;
   category?: string;
   status?: string;
   raw?: unknown;
@@ -61,6 +62,9 @@ export interface AssetSummary {
 
 export interface AssetDetail extends AssetSummary {
   description?: string;
+  location?: string;
+  model?: string;
+  serial?: string;
   metadata?: Record<string, unknown>;
 }
 
