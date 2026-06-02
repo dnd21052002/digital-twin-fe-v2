@@ -5,6 +5,8 @@ import { StatusBadge } from '../../components/ui/StatusBadge';
 import { displayText } from '../../lib/display';
 import { useAssetQuery } from './queries';
 import { RelatedAlarms } from '../alarms/RelatedAlarms';
+import { LatestMetricCards } from '../telemetry/LatestMetricCards';
+import { useLatestMetricsQuery } from '../telemetry/queries';
 import { useViewerStore } from './viewerStore';
 
 function Field({ label, value }: { label: string; value: unknown }) {
@@ -19,6 +21,7 @@ function Field({ label, value }: { label: string; value: unknown }) {
 export function AssetInspector() {
   const selectedAssetId = useViewerStore((state) => state.selectedAssetId);
   const { data: asset, isLoading, isError, error, refetch } = useAssetQuery(selectedAssetId);
+  const latestMetrics = useLatestMetricsQuery(selectedAssetId);
 
   if (!selectedAssetId) return <EmptyState title="No asset selected" message="Select an asset from search or facility hierarchy." />;
   if (isLoading) return <LoadingState label="Loading asset" />;
@@ -39,6 +42,13 @@ export function AssetInspector() {
         <Field label="Model" value={asset.model} />
         <Field label="Serial" value={asset.serial} />
       </dl>
+      <section className="rounded-xl border border-border-subtle bg-bg-surface p-3" aria-label="Latest telemetry summary">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h4 className="text-sm font-semibold text-text-primary">Latest telemetry</h4>
+          <a className="text-xs font-semibold text-primary hover:underline" href="/telemetry">Open trend</a>
+        </div>
+        {latestMetrics.isLoading ? <LoadingState label="Loading telemetry summary" /> : latestMetrics.isError ? <ErrorState title="Telemetry unavailable" message={latestMetrics.error instanceof Error ? latestMetrics.error.message : 'Unable to load telemetry.'} onRetry={() => void latestMetrics.refetch()} /> : (latestMetrics.data?.items ?? []).length === 0 ? <EmptyState title="No telemetry metrics" message="No latest metrics returned for this asset." /> : <LatestMetricCards metrics={(latestMetrics.data?.items ?? []).slice(0, 2)} />}
+      </section>
       <RelatedAlarms assetId={asset.id} />
     </div>
   );
