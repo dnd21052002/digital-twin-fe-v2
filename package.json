@@ -1,0 +1,45 @@
+{
+  "name": "twin-database-frontend-v2",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@react-three/drei": "latest",
+    "@react-three/fiber": "latest",
+    "@tanstack/react-query": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest",
+    "recharts": "latest",
+    "three": "latest",
+    "zustand": "latest"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "autoprefixer": "latest",
+    "eslint": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "eslint-plugin-react-refresh": "latest",
+    "globals": "^17.6.0",
+    "jsdom": "latest",
+    "postcss": "latest",
+    "tailwindcss": "^3.4.19",
+    "typescript": "latest",
+    "typescript-eslint": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}
