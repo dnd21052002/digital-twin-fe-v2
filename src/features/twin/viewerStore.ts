@@ -13,6 +13,7 @@ export type ViewerState = {
   selectAsset: (id: string | null) => void;
   selectAlarm: (alarmId: string | null, assetId?: string | null) => void;
   toggleLayer: (layer: ViewerLayer) => void;
+  setDeepLinkState: (state: Partial<Pick<ViewerState, 'selectedSceneId' | 'selectedAssetId' | 'selectedAlarmId' | 'layers'>>) => void;
   openDrawer: (drawer: ViewerDrawer) => void;
   closeDrawer: () => void;
 };
@@ -34,6 +35,7 @@ export const useViewerStore = create<ViewerState>((set) => ({
     set((state) => ({
       layers: state.layers.includes(layer) ? state.layers.filter((item) => item !== layer) : [...state.layers, layer],
     })),
+  setDeepLinkState: (next) => set(next),
   openDrawer: (drawer) => set({ drawer }),
   closeDrawer: () => set({ drawer: null }),
 }));

@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 import { Panel } from '../../components/ui/Panel';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -14,6 +17,55 @@ import { SceneSelector } from './SceneSelector';
 import { useViewerStore, type ViewerLayer } from './viewerStore';
 
 const layers: ViewerLayer[] = ['thermal', 'airflow', 'power', 'xray', 'alarm'];
+const layerSet = new Set<ViewerLayer>(layers);
+
+function parseLayers(params: URLSearchParams): ViewerLayer[] {
+  const parsed = params
+    .getAll('layer')
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim())
+    .filter((value): value is ViewerLayer => layerSet.has(value as ViewerLayer));
+  return Array.from(new Set(parsed));
+}
+
+function buildTwinSearch(state: Pick<ReturnType<typeof useViewerStore.getState>, 'selectedSceneId' | 'selectedAssetId' | 'selectedAlarmId' | 'layers'>) {
+  const params = new URLSearchParams();
+  if (state.selectedSceneId) params.set('sceneId', state.selectedSceneId);
+  if (state.selectedAssetId) params.set('assetId', state.selectedAssetId);
+  if (state.selectedAlarmId) params.set('alarmId', state.selectedAlarmId);
+  state.layers.forEach((layer) => params.append('layer', layer));
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+function useTwinDeepLinks() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hydrated = useRef(false);
+  const setDeepLinkState = useViewerStore((state) => state.setDeepLinkState);
+  const selectedSceneId = useViewerStore((state) => state.selectedSceneId);
+  const selectedAssetId = useViewerStore((state) => state.selectedAssetId);
+  const selectedAlarmId = useViewerStore((state) => state.selectedAlarmId);
+  const activeLayers = useViewerStore((state) => state.layers);
+  const initialSearch = useRef(location.search);
+
+  useEffect(() => {
+    const params = new URLSearchParams(initialSearch.current);
+    setDeepLinkState({
+      selectedSceneId: params.get('sceneId'),
+      selectedAssetId: params.get('assetId'),
+      selectedAlarmId: params.get('alarmId'),
+      layers: parseLayers(params),
+    });
+    hydrated.current = true;
+  }, [setDeepLinkState]);
+
+  useEffect(() => {
+    if (!hydrated.current) return;
+    const nextSearch = buildTwinSearch({ selectedSceneId, selectedAssetId, selectedAlarmId, layers: activeLayers });
+    if (nextSearch !== location.search) navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
+  }, [activeLayers, location.pathname, location.search, navigate, selectedAlarmId, selectedAssetId, selectedSceneId]);
+}
 
 function LayerToggles() {
   const active = useViewerStore((state) => state.layers);
@@ -58,6 +110,7 @@ function Workspace() {
 }
 
 export function TwinPage() {
+  useTwinDeepLinks();
   return (
     <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
       <Panel title="Twin controls" subtitle="Scene, facility, assets, layers" className="space-y-5">
