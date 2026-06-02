@@ -3,7 +3,7 @@ import { fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getAccessToken, getUser, setTokens } from '../authStorage';
+import { clearAuth, getAccessToken, getRefreshToken, getUser, setTokens, setUser } from '../authStorage';
 import { LoginPage } from '../LoginPage';
 import { ProtectedRoute } from '../ProtectedRoute';
 
@@ -88,5 +88,21 @@ describe('auth feature', () => {
     );
 
     expect(screen.getByRole('heading', { name: /private twin/i })).toBeInTheDocument();
+  });
+
+  it('does not throw when browser storage is unavailable', () => {
+    const originalLocalStorage = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', { configurable: true, value: undefined });
+
+    expect(() => setTokens({ accessToken: 'access', refreshToken: 'refresh' })).not.toThrow();
+    expect(() => setUser({ id: 'u1', name: 'Operator' })).not.toThrow();
+    expect(() => clearAuth()).not.toThrow();
+    expect(getAccessToken()).toBeNull();
+    expect(getRefreshToken()).toBeNull();
+    expect(getUser()).toBeNull();
+
+    if (originalLocalStorage) {
+      Object.defineProperty(window, 'localStorage', originalLocalStorage);
+    }
   });
 });

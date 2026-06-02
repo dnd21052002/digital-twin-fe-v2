@@ -4,42 +4,53 @@ export const ACCESS_TOKEN_KEY = 'twin.accessToken';
 export const REFRESH_TOKEN_KEY = 'twin.refreshToken';
 export const USER_KEY = 'twin.user';
 
+function getStorage(): Storage | null {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null;
+  }
+  return window.localStorage;
+}
+
 export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return getStorage()?.getItem(ACCESS_TOKEN_KEY) ?? null;
 }
 
 export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  return getStorage()?.getItem(REFRESH_TOKEN_KEY) ?? null;
 }
 
 export function getUser(): User | null {
-  const value = localStorage.getItem(USER_KEY);
+  const storage = getStorage();
+  const value = storage?.getItem(USER_KEY);
   if (!value) return null;
   try {
     return JSON.parse(value) as User;
   } catch {
-    localStorage.removeItem(USER_KEY);
+    storage?.removeItem(USER_KEY);
     return null;
   }
 }
 
 export function setTokens(tokens: AuthTokens): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+  const storage = getStorage();
+  storage?.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
   if (tokens.refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    storage?.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
   }
 }
 
 export function setUser(user: User | null | undefined): void {
+  const storage = getStorage();
   if (!user) {
-    localStorage.removeItem(USER_KEY);
+    storage?.removeItem(USER_KEY);
     return;
   }
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  storage?.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export function clearAuth(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  const storage = getStorage();
+  storage?.removeItem(ACCESS_TOKEN_KEY);
+  storage?.removeItem(REFRESH_TOKEN_KEY);
+  storage?.removeItem(USER_KEY);
 }
