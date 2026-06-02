@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiRequest } from '../../lib/api/client';
-import { normalizeList } from '../../lib/api/normalizers';
-import type { AlarmSummary } from '../../lib/api/types';
+import { normalizeList, normalizeNearestCamera, normalizeSopResponse } from '../../lib/api/normalizers';
+import type { AlarmEvent, AlarmSummary, NearestCamera, SopResponse } from '../../lib/api/types';
 
 export type AlarmFilters = {
   assetId?: string | null;
@@ -12,11 +12,26 @@ export type AlarmFilters = {
 
 export interface AlarmDetail extends AlarmSummary {
   description?: string;
+  message?: string | null;
+  status?: string;
+  severity?: string;
   location?: string;
   source?: string;
   owner?: string;
+  assetId?: string;
+  raisedAt?: string;
   resolvedAt?: string;
+  ackedBy?: string | null;
+  ackedAt?: string | null;
+  assignedTo?: string | null;
+  assignedAt?: string | null;
+  resolutionNote?: string | null;
+  forecastValue?: number | null;
+  thresholdValue?: number | null;
+  currentValue?: number | null;
+  rule?: { id: string; code: string; name: string } | null;
   relatedAlarms?: AlarmSummary[];
+  timeline?: AlarmEvent[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -100,5 +115,123 @@ export function useAlarmQuery(id: string | null | undefined) {
     queryKey: ['alarms', id],
     queryFn: async () => normalizeAlarmDetail(unwrapData(await apiRequest<unknown>(`/alarms/${id}`))),
     enabled: Boolean(id),
+  });
+}
+
+// ── Dependent queries ──
+
+export function useAlarmTimelineQuery(alarmId: string | null | undefined) {
+  return useQuery<AlarmEvent[]>({
+    queryKey: ['alarms', alarmId, 'timeline'],
+    queryFn: async () => {
+      const detail = await apiRequest<unknown>(`/alarms/${alarmId}`);
+      const rec = isRecord(detail) ? detail : {};
+      const events = rec.timeline ?? rec.events ?? [];
+      return normalizeList(events).map((e: unknown) => {
+        const r = isRecord(e) ? e : {};
+        const id = firstString(r, ['id', 'eventId', 'event_id'], `evt-${Math.random()}`);
+        return {
+          id,
+          occurredAt: firstString(r, ['occurredAt', 'occurred_at', 'timestamp', 'ts']),
+          actorId: firstString(r, ['actorId', 'actor_id']) || null,
+          eventType: firstString(r, ['eventType', 'event_type', 'type']),
+          payload: 'payload' in r ? r.payload : null,
+        };
+      });
+    },
+    enabled: Boolean(alarmId),
+  });
+}
+
+export function useNearestCamerasQuery(alarmId: string | null | undefined) {
+  return useQuery<NearestCamera[]>({
+    queryKey: ['alarms', alarmId, 'nearest-cameras'],
+    queryFn: async () => {
+      const data = await apiRequest<unknown>(`/alarms/${alarmId}/nearest-cameras`);
+      return normalizeList(unwrapData(data)).map(normalizeNearestCamera);
+    },
+    enabled: Boolean(alarmId),
+  });
+}
+
+export function useSopQuery(alarmId: string | null | undefined) {
+  return useQuery<SopResponse | null>({
+    queryKey: ['alarms', alarmId, 'sop'],
+    queryFn: async () => {
+      try {
+        const data = await apiRequest<unknown>(`/alarms/${alarmId}/sop`);
+        return normalizeSopResponse(unwrapData(data));
+      } catch (err) {
+        if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 404) return null;
+        throw err;
+      }
+    },
+    enabled: Boolean(alarmId),
+  });
+}
+
+// ── Mutations ──
+
+export function useAcknowledgeAlarm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ alarmId, comment }: { alarmId: string; comment?: string }) => {
+      return apiRequest<{ ok: true }>(`/alarms/${alarmId}/acknowledge`, {
+        method: 'POST',
+        body: comment ? { comment } : undefined,
+      });
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['alarms', variables.alarmId] });
+      qc.invalidateQueries({ queryKey: ['alarms'] });
+    },
+  });
+}
+
+export function useAssignAlarm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ alarmId, assigneeUserId }: { alarmId: string; assigneeUserId: string }) => {
+      return apiRequest<{ ok: true }>(`/alarms/${alarmId}/assign`, {
+        method: 'POST',
+        body: { assigneeUserId },
+      });
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['alarms', variables.alarmId] });
+      qc.invalidateQueries({ queryKey: ['alarms'] });
+    },
+  });
+}
+
+export function useResolveAlarm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ alarmId, resolution }: { alarmId: string; resolution: string }) => {
+      return apiRequest<{ ok: true }>(`/alarms/${alarmId}/resolve`, {
+        method: 'POST',
+        body: { resolution },
+      });
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['alarms', variables.alarmId] });
+      qc.invalidateQueries({ queryKey: ['alarms'] });
+    },
+  });
+}
+
+// ── Users for assign dropdown ──
+
+export function useUsersQuery() {
+  return useQuery<{ id: string; name: string }[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const data = await apiRequest<unknown>('/users');
+      return normalizeList(unwrapData(data)).map((u: unknown) => {
+        const r = isRecord(u) ? u : {};
+        return { id: firstString(r, ['id', 'userId', 'user_id']), name: firstString(r, ['name', 'displayName', 'display_name'], 'User') };
+      });
+    },
+    staleTime: 120_000,
   });
 }

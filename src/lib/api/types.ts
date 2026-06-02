@@ -103,3 +103,44 @@ export interface Viewpoint {
   category?: string;
   raw?: unknown;
 }
+
+export interface AlarmEvent {
+  id: string;
+  occurredAt: string;
+  actorId: string | null;
+  eventType: string;
+  payload: unknown;
+  raw?: unknown;
+}
+
+export interface NearestCamera {
+  cameraId: string;
+  name: string;
+  streamUrl: string;
+  coveragePct: number;
+  priority: number;
+  raw?: unknown;
+}
+
+export interface SopDocument {
+  id: string;
+  code: string;
+  title: string;
+  summary: string | null;
+  raw?: unknown;
+}
+
+export interface SopStep {
+  stepNumber: number;
+  instruction: string;
+  expectedOutcome: string | null;
+  requiresRole: string | null;
+  estimatedMinutes: number | null;
+  raw?: unknown;
+}
+
+export interface SopResponse {
+  sop: SopDocument;
+  steps: SopStep[];
+  raw?: unknown;
+}

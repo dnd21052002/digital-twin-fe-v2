@@ -1,4 +1,5 @@
 import type {
+  AlarmEvent,
   AlarmSummary,
   AssetDetail,
   AssetSummary,
@@ -6,9 +7,13 @@ import type {
   LatestMetricsResponse,
   LoginResponse,
   MetricPoint,
+  NearestCamera,
   SceneAssetNode,
   SceneManifest,
   SceneSummary,
+  SopDocument,
+  SopResponse,
+  SopStep,
   User,
   Viewpoint,
 } from './types';
@@ -216,4 +221,60 @@ export function normalizeTimeseries(value: unknown) {
     return metric;
   });
   return { series, raw: value };
+}
+
+export function normalizeAlarmEvent(value: unknown): AlarmEvent {
+  const record = isRecord(value) ? value : {};
+  const id = firstString(record, ['id', 'eventId', 'event_id'], 'evt');
+  const event: AlarmEvent = { id, occurredAt: firstString(record, ['occurredAt', 'occurred_at', 'timestamp', 'ts']), actorId: null, eventType: firstString(record, ['eventType', 'event_type', 'type']), payload: null, raw: value };
+  const actorId = firstString(record, ['actorId', 'actor_id']);
+  if (actorId) event.actorId = actorId;
+  if ('payload' in record) event.payload = record.payload;
+  return event;
+}
+
+export function normalizeNearestCamera(value: unknown): NearestCamera {
+  const record = isRecord(value) ? value : {};
+  return {
+    cameraId: firstString(record, ['cameraId', 'camera_id', 'id']),
+    name: firstString(record, ['name', 'displayName', 'display_name', 'title'], 'Camera'),
+    streamUrl: firstString(record, ['streamUrl', 'stream_url', 'url']),
+    coveragePct: typeof record.coveragePct === 'number' ? record.coveragePct : typeof record.coverage_pct === 'number' ? record.coverage_pct : 0,
+    priority: typeof record.priority === 'number' ? record.priority : 0,
+    raw: value,
+  };
+}
+
+export function normalizeSopDocument(value: unknown): SopDocument {
+  const record = isRecord(value) ? value : {};
+  return {
+    id: firstString(record, ['id', 'sopId', 'sop_id', 'documentId'], 'sop'),
+    code: firstString(record, ['code']),
+    title: firstString(record, ['title', 'name'], 'SOP'),
+    summary: firstString(record, ['summary', 'description']) || null,
+    raw: value,
+  };
+}
+
+export function normalizeSopStep(value: unknown): SopStep {
+  const record = isRecord(value) ? value : {};
+  return {
+    stepNumber: typeof record.stepNumber === 'number' ? record.stepNumber : typeof record.step_number === 'number' ? record.step_number : 0,
+    instruction: firstString(record, ['instruction', 'description', 'text'], ''),
+    expectedOutcome: firstString(record, ['expectedOutcome', 'expected_outcome']) || null,
+    requiresRole: firstString(record, ['requiresRole', 'requires_role']) || null,
+    estimatedMinutes: typeof record.estimatedMinutes === 'number' ? record.estimatedMinutes : typeof record.estimated_minutes === 'number' ? record.estimated_minutes : null,
+    raw: value,
+  };
+}
+
+export function normalizeSopResponse(value: unknown): SopResponse {
+  const record = isRecord(value) ? value : {};
+  const sopInput = record.sop ?? record.document ?? record;
+  const stepsInput = record.steps ?? record.items ?? [];
+  return {
+    sop: normalizeSopDocument(sopInput),
+    steps: normalizeList(stepsInput).map(normalizeSopStep),
+    raw: value,
+  };
 }
