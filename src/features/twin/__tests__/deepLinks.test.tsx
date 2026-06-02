@@ -13,6 +13,7 @@ vi.mock('../queries', () => ({
   useScenesQuery: () => ({ data: [{ id: 's1', name: 'Scene 1' }], isLoading: false, isError: false, refetch: vi.fn() }),
   useFacilityTreeQuery: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }),
   useAssetQuery: () => ({ data: undefined, isLoading: false, isError: false, refetch: vi.fn() }),
+  useViewpointsQuery: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }),
 }));
 
 vi.mock('../../alarms/queries', () => ({

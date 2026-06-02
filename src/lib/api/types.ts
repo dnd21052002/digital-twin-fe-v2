@@ -94,3 +94,12 @@ export interface TimeseriesResponse {
   series: MetricPoint[];
   raw?: unknown;
 }
+
+export interface Viewpoint {
+  id: string;
+  name: string;
+  position: [number, number, number];
+  target?: [number, number, number];
+  category?: string;
+  raw?: unknown;
+}

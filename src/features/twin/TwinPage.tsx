@@ -12,7 +12,7 @@ import { AssetSearch } from '../assets/AssetSearch';
 import { AssetInspector } from './AssetInspector';
 import { FacilityTree } from './FacilityTree';
 import { useAlarmsQuery } from '../alarms/queries';
-import { useAssetsQuery, useSceneManifestQuery } from './queries';
+import { useAssetsQuery, useSceneManifestQuery, useViewpointsQuery } from './queries';
 import { SceneSelector } from './SceneSelector';
 import { useViewerStore, type ViewerLayer } from './viewerStore';
 
@@ -86,9 +86,11 @@ function Workspace() {
   const selectedAssetId = useViewerStore((state) => state.selectedAssetId);
   const activeLayers = useViewerStore((state) => state.layers);
   const selectAsset = useViewerStore((state) => state.selectAsset);
+  const selectAlarm = useViewerStore((state) => state.selectAlarm);
   const { data: manifest, isLoading, isError, error, refetch } = useSceneManifestQuery(selectedSceneId);
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError, error: assetsErrorValue, refetch: refetchAssets } = useAssetsQuery();
   const { data: alarms = [] } = useAlarmsQuery({ status: 'open' });
+  const { data: viewpoints } = useViewpointsQuery(selectedSceneId);
   const sceneAlarms = alarms.filter((alarm): alarm is typeof alarm & { assetId: string } => Boolean(alarm.assetId));
 
   if (!selectedSceneId) return <EmptyState title="3D Digital Twin Workspace" message="Choose a scene to load the digital twin workspace." />;
@@ -110,7 +112,16 @@ function Workspace() {
           <p className="mt-1 font-mono text-sm font-semibold text-primary">{displayText(selectedAssetId, 'None')}</p>
         </div>
       </div>
-      <SceneCanvas manifest={manifest} assets={assets} selectedAssetId={selectedAssetId} activeLayers={activeLayers} alarms={sceneAlarms} onAssetSelect={selectAsset} />
+      <SceneCanvas
+        manifest={manifest}
+        assets={assets}
+        selectedAssetId={selectedAssetId}
+        activeLayers={activeLayers}
+        alarms={sceneAlarms}
+        viewpoints={viewpoints}
+        onAssetSelect={selectAsset}
+        onAlarmClick={(alarm) => selectAlarm(alarm.id, alarm.assetId)}
+      />
     </div>
   );
 }

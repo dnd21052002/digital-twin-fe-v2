@@ -10,6 +10,7 @@ import type {
   SceneManifest,
   SceneSummary,
   User,
+  Viewpoint,
 } from './types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -188,6 +189,21 @@ export function normalizeLatestMetrics(value: unknown): LatestMetricsResponse {
     else if (isRecord(metric) && (typeof metric.value === 'number' || typeof metric.value === 'string' || typeof metric.value === 'boolean' || metric.value === null)) metrics[key] = metric.value;
   }
   return { metrics, raw: value };
+}
+
+export function normalizeViewpoint(value: unknown): Viewpoint {
+  const record = isRecord(value) ? value : {};
+  const id = firstString(record, ['id', 'viewpointId', 'vp_id'], 'vp');
+  const name = firstString(record, ['name', 'title', 'label'], id);
+  const rawPos = Array.isArray(record.position) ? (record.position as number[]) : isRecord(record.position) ? [Number((record.position as Record<string, unknown>).x) || 0, Number((record.position as Record<string, unknown>).y) || 0, Number((record.position as Record<string, unknown>).z) || 0] : [0, 3, 5];
+  const position: [number, number, number] = [rawPos[0] ?? 0, rawPos[1] ?? 3, rawPos[2] ?? 5];
+  const rawTarget = Array.isArray(record.target) ? (record.target as number[]) : isRecord(record.target) ? [Number((record.target as Record<string, unknown>).x) || 0, Number((record.target as Record<string, unknown>).y) || 0, Number((record.target as Record<string, unknown>).z) || 0] : undefined;
+  const target: [number, number, number] | undefined = rawTarget ? [rawTarget[0] ?? 0, rawTarget[1] ?? 0, rawTarget[2] ?? 0] : undefined;
+  const viewpoint: Viewpoint = { id, name, position, raw: value };
+  if (target) viewpoint.target = target;
+  const category = firstString(record, ['category', 'type', 'kind']);
+  if (category) viewpoint.category = category;
+  return viewpoint;
 }
 
 export function normalizeTimeseries(value: unknown) {

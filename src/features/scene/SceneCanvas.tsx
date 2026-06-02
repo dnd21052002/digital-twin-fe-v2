@@ -1,9 +1,11 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { Grid, OrbitControls } from '@react-three/drei';
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type * as THREE from 'three';
 
+import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
-import type { AssetSummary, FacilityNode, SceneManifest } from '../../lib/api/types';
+import type { AssetSummary, FacilityNode, SceneManifest, Viewpoint } from '../../lib/api/types';
 import type { ViewerLayer } from '../twin/viewerStore';
 import { AlarmBeacon, type SceneAlarm } from './AlarmBeacon';
 import { AssetMesh } from './AssetMesh';
@@ -12,14 +14,56 @@ import { buildSceneLayout } from './layout';
 import { SceneLabels } from './SceneLabels';
 
 export type SceneCanvasProps = {
-  manifest?: SceneManifest | null;
+  manifest?: SceneManifest | null | undefined;
   assets: AssetSummary[];
   facilityTree?: FacilityNode[] | undefined;
   selectedAssetId?: string | null | undefined;
   activeLayers: ViewerLayer[];
   alarms?: SceneAlarm[];
   onAssetSelect?: ((assetId: string) => void) | undefined;
+  onAlarmClick?: ((alarm: SceneAlarm) => void) | undefined;
+  viewpoints?: Viewpoint[] | undefined;
 };
+
+/** Camera controller that animates to viewpoints */
+function ViewpointController({ viewpoints: _viewpoints }: { viewpoints: Viewpoint[] | undefined }) {
+  void _viewpoints;
+  const { camera } = useThree();
+  const controlsRef = useRef<React.ElementRef<typeof OrbitControls>>(null);
+  const goTo = useCallback((vp: Viewpoint) => {
+    const target = vp.target ?? [0, 0, 0];
+    // Animate camera position and target
+    const startPos = [camera.position.x, camera.position.y, camera.position.z];
+    const startTarget = controlsRef.current?.target?.toArray() ?? [0, 0, 0];
+    const duration = 800;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      camera.position.lerpVectors(
+        { x: startPos[0], y: startPos[1], z: startPos[2] } as THREE.Vector3,
+        { x: vp.position[0], y: vp.position[1], z: vp.position[2] } as THREE.Vector3,
+        ease,
+      );
+      if (controlsRef.current) {
+        controlsRef.current.target.lerpVectors(
+          { x: startTarget[0], y: startTarget[1], z: startTarget[2] } as THREE.Vector3,
+          { x: target[0], y: target[1], z: target[2] } as THREE.Vector3,
+          ease,
+        );
+        controlsRef.current.update();
+      }
+      if (t < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [camera]);
+  // Expose goTo via ref to parent
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__viewpointGoTo = goTo;
+    return () => { delete (window as unknown as Record<string, unknown>).__viewpointGoTo; };
+  }, [goTo]);
+  return <OrbitControls ref={controlsRef} makeDefault enableDamping dampingFactor={0.08} target={[0, 0.8, 0]} maxPolarAngle={Math.PI / 2.08} />;
+}
 
 function FloorTiles() {
   return <group>
@@ -28,7 +72,23 @@ function FloorTiles() {
   </group>;
 }
 
-export function SceneCanvas({ manifest, assets, facilityTree, selectedAssetId, activeLayers, alarms = [], onAssetSelect }: SceneCanvasProps) {
+function ViewpointButtons({ viewpoints }: { viewpoints: Viewpoint[] | undefined }) {
+  if (!viewpoints || viewpoints.length === 0) return null;
+  return (
+    <div className="absolute right-3 top-3 z-10 flex flex-wrap gap-1.5">
+      {viewpoints.map((vp) => (
+        <Button key={vp.id} size="sm" variant="secondary" className="h-7 px-2 text-[0.7rem]" onClick={() => {
+          const goTo = (window as unknown as Record<string, unknown>).__viewpointGoTo as ((vp: Viewpoint) => void) | undefined;
+          goTo?.(vp);
+        }}>
+          {vp.name}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+export function SceneCanvas({ manifest, assets, facilityTree, selectedAssetId, activeLayers, alarms = [], onAssetSelect, onAlarmClick, viewpoints }: SceneCanvasProps) {
   const layout = useMemo(() => buildSceneLayout({ manifest, assets, facilityTree }), [manifest, assets, facilityTree]);
   if (layout.nodes.length === 0) return <EmptyState title="No scene assets" message="This scene has no placeable assets yet." />;
   const alarmByAsset = new Map(alarms.map((alarm) => [alarm.assetId, alarm]));
@@ -41,13 +101,14 @@ export function SceneCanvas({ manifest, assets, facilityTree, selectedAssetId, a
       <FloorTiles />
       <LayerOverlays layout={layout} activeLayers={activeLayers} />
       {layout.nodes.map((node) => <AssetMesh key={node.assetId} node={node} selected={node.assetId === selectedAssetId} onAssetSelect={onAssetSelect} />)}
-      {activeLayers.includes('alarm') && layout.nodes.map((node) => { const alarm = alarmByAsset.get(node.assetId); return alarm ? <AlarmBeacon key={alarm.id} position={node.position} alarm={alarm} /> : null; })}
+      {activeLayers.includes('alarm') && layout.nodes.map((node) => { const alarm = alarmByAsset.get(node.assetId); return alarm ? <AlarmBeacon key={alarm.id} position={node.position} alarm={alarm} onAlarmClick={onAlarmClick} /> : null; })}
       <SceneLabels layout={layout} selectedAssetId={selectedAssetId} />
-      <OrbitControls makeDefault enableDamping dampingFactor={0.08} target={[layout.bounds.center[0], 0.8, layout.bounds.center[2]]} maxPolarAngle={Math.PI / 2.08} />
+      <ViewpointController viewpoints={viewpoints} />
     </Canvas>
     <div className="pointer-events-none absolute left-4 top-4 rounded-xl border border-white/[0.08] bg-bg-panel/85 px-3 py-2 font-mono text-[0.7rem] text-text-secondary backdrop-blur">
-      {layout.nodes.length} assets · {layout.rows.length} rows · {layout.zones.length} zones
+      {layout.nodes.length} assets · {layout.rows.length} rows · {layout.zones.length} zones{layout.thermalGrid.length > 0 ? ` · ${layout.thermalGrid.length} thermal cells` : ''}
     </div>
+    <ViewpointButtons viewpoints={viewpoints} />
     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-bg-base/80 to-transparent" />
   </div>;
 }
