@@ -14,15 +14,15 @@ export type MetricCardProps = {
 
 export function MetricCard({ label, value, unit, status, quality, timestamp }: MetricCardProps) {
   return (
-    <article className="rounded-xl border border-border-subtle bg-bg-panel p-4">
+    <article className="rounded-lg border border-hairline bg-surface-1 p-4">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+        <p className="text-eyebrow text-ink-subtle">{label}</p>
         {status !== undefined && <StatusBadge status={status} />}
       </div>
-      <p className="mt-3 font-mono text-3xl font-semibold tabular-nums text-text-primary">
-        {displayText(value)}{unit && <span className="ml-1 text-sm text-text-secondary">{unit}</span>}
+      <p className="mt-3 font-mono text-headline tabular-nums text-ink">
+        {displayText(value)}{unit && <span className="ml-1 text-body-sm text-ink-muted">{unit}</span>}
       </p>
-      {(quality || timestamp) && <p className="mt-2 text-xs text-text-muted">{quality}{quality && timestamp ? ' · ' : null}{timestamp}</p>}
+      {(quality || timestamp) && <p className="mt-2 text-caption text-ink-tertiary">{quality}{quality && timestamp ? ' · ' : null}{timestamp}</p>}
     </article>
   );
 }

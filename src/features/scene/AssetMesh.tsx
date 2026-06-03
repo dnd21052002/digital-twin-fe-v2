@@ -11,13 +11,13 @@ type Shape = { size: SceneVec3; color: string; emissive?: string };
 
 function shapeFor(category: string): Shape {
   const key = category.toLowerCase();
-  if (key.includes('rack')) return { size: [1.15, 3.2, 1], color: '#172033' };
-  if (key.includes('server')) return { size: [1.35, 0.55, 0.8], color: '#24314f' };
-  if (key.includes('sensor')) return { size: [0.45, 0.45, 0.45], color: '#45d6ff', emissive: '#0b5f7a' };
-  if (key.includes('cool') || key.includes('crac') || key.includes('hvac')) return { size: [1.7, 1.5, 1.25], color: '#31546a' };
-  if (key.includes('ups') || key.includes('battery') || key.includes('generator')) return { size: [1.4, 2.3, 1.2], color: '#4a3d2c' };
-  if (key.includes('pdu') || key.includes('power')) return { size: [0.65, 2.4, 0.85], color: '#4b365f' };
-  return { size: [1, 1, 1], color: '#334155' };
+  if (key.includes('rack')) return { size: [1.15, 3.2, 1], color: '#141516' };
+  if (key.includes('server')) return { size: [1.35, 0.55, 0.8], color: '#1a1c1e' };
+  if (key.includes('sensor')) return { size: [0.45, 0.45, 0.45], color: '#5e6ad2', emissive: '#3a3f8a' };
+  if (key.includes('cool') || key.includes('crac') || key.includes('hvac')) return { size: [1.7, 1.5, 1.25], color: '#1a1c1e' };
+  if (key.includes('ups') || key.includes('battery') || key.includes('generator')) return { size: [1.4, 2.3, 1.2], color: '#1a1c1e' };
+  if (key.includes('pdu') || key.includes('power')) return { size: [0.65, 2.4, 0.85], color: '#1a1c1e' };
+  return { size: [1, 1, 1], color: '#18191a' };
 }
 
 /** RU line detail for rack front face */
@@ -46,7 +46,7 @@ function UPSIndicator() {
 function ServerBlades({ depth, ..._rest2 }: { width: number; depth: number }) {
   void _rest2;
   return <group position={[0, -0.05, 0]}>
-    {[0, 0.12, -0.12].map((xOff, i) => <mesh key={i} position={[xOff, 0, depth / 2 + 0.005]}><boxGeometry args={[0.08, 0.02, 0.015]} /><meshBasicMaterial color="#38bdf8" transparent opacity={0.7} /></mesh>)}
+    {[0, 0.12, -0.12].map((xOff, i) => <mesh key={i} position={[xOff, 0, depth / 2 + 0.005]}><boxGeometry args={[0.08, 0.02, 0.015]} /><meshBasicMaterial color="#5e6ad2" transparent opacity={0.7} /></mesh>)}
   </group>;
 }
 
@@ -62,7 +62,7 @@ export function AssetMesh({ node, selected = false, onAssetSelect }: AssetMeshPr
   const isUPS = key.includes('ups') || key.includes('battery') || key.includes('generator');
   const isServer = key.includes('server');
   const y = shape.size[1] / 2;
-  const emissive = selected || hovered ? '#1d9bf0' : shape.emissive ?? '#000000';
+  const emissive = selected || hovered ? '#5e6ad2' : shape.emissive ?? '#000000';
   const handleClick = (event: ThreeEvent<MouseEvent>) => { event.stopPropagation(); onAssetSelect?.(node.assetId); };
   return (
     <group
@@ -77,14 +77,14 @@ export function AssetMesh({ node, selected = false, onAssetSelect }: AssetMeshPr
         <mesh position={[0, y + 0.15, 0]}>
           <sphereGeometry args={[shape.size[0], 20, 20]} />
           <meshStandardMaterial color={shape.color} emissive={emissive} emissiveIntensity={selected || hovered ? 1.2 : 0.45} />
-          {hovered && <Outlines thickness={0.03} color="#38bdf8" />}
+          {hovered && <Outlines thickness={0.03} color="#5e6ad2" />}
         </mesh>
       ) : (
         <mesh position={[0, y, 0]}>
           <boxGeometry args={shape.size} />
           <meshStandardMaterial color={shape.color} emissive={emissive} emissiveIntensity={selected || hovered ? 0.25 : 0.04} roughness={0.65} metalness={0.25} />
-          <Edges color={selected ? '#7dd3fc' : hovered ? '#38bdf8' : '#475569'} />
-          {hovered && <Outlines thickness={0.02} color="#38bdf8" />}
+          <Edges color={selected ? '#828fff' : hovered ? '#5e6ad2' : '#3e3e44'} />
+          {hovered && <Outlines thickness={0.02} color="#5e6ad2" />}
         </mesh>
       )}
       {/* Rack RU lines */}
@@ -101,7 +101,7 @@ export function AssetMesh({ node, selected = false, onAssetSelect }: AssetMeshPr
         <meshBasicMaterial color={tone === 'unknown' ? '#64748b' : statusColor} />
       </mesh>
       {/* Selected ring */}
-      {selected && <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}><ringGeometry args={[1.05, 1.28, 48]} /><meshBasicMaterial color="#38bdf8" transparent opacity={0.9} /></mesh>}
+      {selected && <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}><ringGeometry args={[1.05, 1.28, 48]} /><meshBasicMaterial color="#5e6ad2" transparent opacity={0.9} /></mesh>}
     </group>
   );
 }

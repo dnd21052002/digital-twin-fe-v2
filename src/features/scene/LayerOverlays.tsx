@@ -29,11 +29,11 @@ function AirflowArrow({ position, direction = 1 }: { position: [number, number, 
     <group position={[position[0], 0.12, position[2]]}>
       <mesh rotation={[0, 0, (-Math.PI / 2) * direction]}>
         <coneGeometry args={[0.18, 0.55, 3]} />
-        <meshBasicMaterial color="#38bdf8" transparent opacity={0.75} />
+        <meshBasicMaterial color="#5e6ad2" transparent opacity={0.75} />
       </mesh>
       <mesh position={[0.45 * direction, 0, 0]} rotation={[0, 0, (Math.PI / 2) * direction]}>
         <cylinderGeometry args={[0.035, 0.035, 0.9, 8]} />
-        <meshBasicMaterial color="#38bdf8" transparent opacity={0.5} />
+        <meshBasicMaterial color="#5e6ad2" transparent opacity={0.5} />
       </mesh>
     </group>
   );
@@ -76,6 +76,6 @@ export function LayerOverlays({ layout, activeLayers }: LayerOverlaysProps) {
       <PowerPath key={`pwr-${row.zoneLabel}-${row.label}`} rowPosition={row.position} assetCount={row.assetIds.length} zoneLabel={row.zoneLabel} label={row.label} />
     ))}
     {/* X-Ray: wireframe overlay */}
-    {activeLayers.includes('xray') && <mesh position={[center[0], 1.2, center[2]]}><boxGeometry args={[size[0] + 2, 2.4, size[2] + 2]} /><meshBasicMaterial color="#93c5fd" wireframe transparent opacity={0.14} /></mesh>}
+    {activeLayers.includes('xray') && <mesh position={[center[0], 1.2, center[2]]}><boxGeometry args={[size[0] + 2, 2.4, size[2] + 2]} /><meshBasicMaterial color="#7a7fad" wireframe transparent opacity={0.14} /></mesh>}
   </group>;
 }

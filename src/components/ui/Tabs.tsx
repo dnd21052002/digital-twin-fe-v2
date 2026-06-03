@@ -37,7 +37,7 @@ export function Tabs({ tabs, selectedId, onChange }: TabsProps) {
 
   return (
     <div>
-      <div role="tablist" className="flex gap-2 border-b border-border-subtle">
+      <div role="tablist" className="flex gap-1 border-b border-hairline">
         {tabs.map((tab, index) => {
           const isSelected = tab.id === selected.id;
           return (
@@ -50,7 +50,7 @@ export function Tabs({ tabs, selectedId, onChange }: TabsProps) {
               aria-selected={isSelected}
               aria-controls={`panel-${tab.id}`}
               tabIndex={isSelected ? 0 : -1}
-              className={`border-b-2 px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isSelected ? 'border-primary text-text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}
+              className={`border-b-2 px-3 py-2 text-button transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus ${isSelected ? 'border-primary text-ink' : 'border-transparent text-ink-subtle hover:text-ink-muted'}`}
               onClick={() => onChange(tab.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}
             >

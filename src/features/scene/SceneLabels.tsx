@@ -17,7 +17,7 @@ function abbrev(name: string, max = 18): string {
 function ZoneLabel({ zone }: { zone: SceneZone }) {
   return (
     <Html position={[zone.position[0], 1.2, zone.position[2] - zone.size[2] / 2 - 1.8]} center>
-      <span className="rounded border border-primary/30 bg-bg-panel/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-primary/80 backdrop-blur">{zone.label}</span>
+      <span className="rounded border border-primary/30 bg-surface-1/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-primary/80">{zone.label}</span>
     </Html>
   );
 }
@@ -34,7 +34,7 @@ function RowLabel({ row }: { row: SceneRow }) {
   return (
     <Html ref={ref} position={[row.position[0], 0.15, row.position[2] + 2]} center>
       {visible && (
-        <span className="rounded border border-border-subtle bg-bg-panel/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
+        <span className="rounded border border-hairline bg-surface-1/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-ink-subtle">
           {row.aisleLabel ? `${row.aisleLabel} · ${row.label}` : row.label}
         </span>
       )}
@@ -55,14 +55,14 @@ function AssetLabel({ node, selected }: { node: SceneNode; selected: boolean }) 
   if (selected) {
     return (
       <Html position={[node.position[0], node.position[1] + 3.9, node.position[2]]} center>
-        <span className="rounded-md border border-primary bg-bg-panel px-2 py-1 text-xs font-semibold text-text-primary shadow-lg">{node.label}</span>
+        <span className="rounded-md border border-primary bg-surface-1 px-2 py-1 text-caption font-medium text-ink">{node.label}</span>
       </Html>
     );
   }
   return (
     <Html ref={ref} position={[node.position[0], node.position[1] + 3.2, node.position[2]]} center>
       {!showAbbrev && (
-        <span className="rounded border border-border-subtle bg-bg-panel/70 px-1.5 py-0.5 text-[9px] text-text-muted">{abbrev(node.label)}</span>
+        <span className="rounded border border-hairline bg-surface-1/70 px-1.5 py-0.5 text-[9px] text-ink-tertiary">{abbrev(node.label)}</span>
       )}
     </Html>
   );

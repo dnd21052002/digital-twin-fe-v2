@@ -44,22 +44,23 @@ export function MetricTrendChart({ assetId, metrics, selectedMetricKey, onMetric
   }, [points, thresholds]);
 
   if (!selected) return <EmptyState title="No metric selected" message={`No trend metric is available for ${assetId}.`} />;
-  return <section className="rounded-xl border border-border-subtle bg-bg-panel p-4" aria-label="Telemetry trend">
+  return <section className="rounded-lg border border-hairline bg-surface-1 p-4" aria-label="Telemetry trend">
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <label className="grid gap-1 text-sm text-text-secondary">Metric
-        <select className="rounded-md border border-border-strong bg-bg-surface px-3 py-2 text-text-primary" value={selected.key} onChange={(event) => onMetricChange(event.target.value)}>
+      <label className="grid gap-1 text-body-sm text-ink-muted">Metric
+        <select className="rounded-md border border-hairline-strong bg-surface-2 px-3 py-2 text-body-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary-focus" value={selected.key} onChange={(event) => onMetricChange(event.target.value)}>
           {metrics.map((metric) => <option key={metric.key} value={metric.key}>{metric.name}</option>)}
         </select>
       </label>
-      <p className="text-xs text-text-muted">{thresholdLines.length > 0 ? 'Yellow=warn, Red=crit · Anomaly dots' : 'Threshold markers shown when data present.'}</p>
+      <p className="text-caption text-ink-tertiary">{thresholdLines.length > 0 ? 'Yellow=warn, Red=crit · Anomaly dots' : 'Threshold markers shown when data present.'}</p>
     </div>
     {isLoading ? <LoadingState label="Loading telemetry trend" /> : isError ? <ErrorState title="Telemetry trend unavailable" message={errorMessage ?? 'Unable to load telemetry trend.'} {...(onRetry ? { onRetry } : {})} /> : points.length === 0 ? <EmptyState title="No trend samples" message="This metric has no samples in the selected range." /> :
       <div className="h-72" role="img" aria-label={`${selected.name} trend chart`}>
         <ResponsiveContainer width="100%" height="100%"><LineChart data={points} margin={{ top: 10, right: 18, bottom: 8, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="timestamp" tickFormatter={timeLabel} minTickGap={28} />
-          <YAxis {...(unit ? { unit: ` ${unit}` } : {})} width={64} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" />
+          <XAxis dataKey="timestamp" tickFormatter={timeLabel} minTickGap={28} stroke="var(--ink-tertiary)" fontSize={11} />
+          <YAxis {...(unit ? { unit: ` ${unit}` } : {})} width={64} stroke="var(--ink-tertiary)" fontSize={11} />
           <Tooltip
+            contentStyle={{ backgroundColor: 'var(--surface-2)', border: '1px solid var(--hairline-strong)', borderRadius: '8px', fontSize: '13px', color: 'var(--ink)' }}
             labelFormatter={(value) => timeLabel(String(value))}
             formatter={(value, name, props) => {
               const point = props.payload as Record<string, unknown>;
@@ -79,8 +80,7 @@ export function MetricTrendChart({ assetId, metrics, selectedMetricKey, onMetric
           })}
           <Line type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={2} dot={false} connectNulls />
         </LineChart></ResponsiveContainer>
-        {anomalyPoints.length > 0 && <p className="mt-2 text-xs text-text-muted">{anomalyPoints.length} anomalous sample(s) detected</p>}
+        {anomalyPoints.length > 0 && <p className="mt-2 text-caption text-ink-tertiary">{anomalyPoints.length} anomalous sample(s) detected</p>}
       </div>}
   </section>;
 }
-

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../auth/authStore';
 import { getUser } from '../auth/authStorage';
 
@@ -21,24 +22,17 @@ export function TopCommandBar() {
   }
 
   return (
-    <header className="flex h-[4.5rem] items-center justify-between border-b border-white/[0.06] bg-bg-panel-soft px-6 shadow-2xl shadow-black/20 backdrop-blur">
-      <div className="flex items-center gap-4">
-        <div className="grid h-10 w-10 place-items-center rounded-xl border border-[color:var(--border-accent)] bg-primary-muted font-mono text-sm font-bold text-primary shadow-lg shadow-sky-950/30">DT</div>
+    <header className="flex h-14 items-center justify-between border-b border-hairline bg-canvas px-5">
+      <div className="flex items-center gap-3">
+        <div className="grid h-8 w-8 place-items-center rounded-md bg-surface-2 border border-hairline font-mono text-caption font-semibold text-primary">DT</div>
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-text-primary">Twin@P.CN Command Center</p>
-          <p className="mt-1 text-xs text-text-secondary">API {apiBase}</p>
+          <p className="text-body-sm font-medium text-ink">Twin@P.CN Command Center</p>
+          <p className="text-caption text-ink-tertiary">{apiBase}</p>
         </div>
       </div>
-      <div className="flex items-center gap-3 text-sm">
-        <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-text-secondary">Incidents 0</span>
-        <span className="hidden rounded-full border border-white/[0.08] bg-bg-elevated px-3 py-1.5 text-xs text-text-secondary md:inline-flex">{operatorName()}</span>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="rounded-lg border border-white/[0.10] px-3 py-2 text-xs font-semibold text-text-primary transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)]"
-        >
-          Logout
-        </button>
+      <div className="flex items-center gap-2">
+        <span className="hidden rounded-md border border-hairline bg-surface-1 px-2.5 py-1 text-caption text-ink-subtle md:inline-flex">{operatorName()}</span>
+        <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
       </div>
     </header>
   );

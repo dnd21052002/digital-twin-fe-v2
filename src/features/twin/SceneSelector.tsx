@@ -22,10 +22,10 @@ export function SceneSelector() {
   if (data.length === 0) return <EmptyState title="No scenes" message="No scene records were returned by the backend." />;
 
   return (
-    <label className="block text-sm text-text-secondary">
+    <label className="block text-body-sm text-ink-muted">
       Scene
       <select
-        className="mt-2 w-full rounded-md border border-border-subtle bg-bg-elevated px-3 py-2 text-text-primary"
+        className="mt-1.5 w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-body-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary-focus"
         value={selectedSceneId ?? ''}
         onChange={(event) => selectScene(event.target.value || null)}
       >

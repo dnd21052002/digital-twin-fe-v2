@@ -67,8 +67,8 @@ function ViewpointController({ viewpoints: _viewpoints }: { viewpoints: Viewpoin
 
 function FloorTiles() {
   return <group>
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow><planeGeometry args={[42, 42]} /><meshStandardMaterial color="#07111f" roughness={0.92} metalness={0.03} /></mesh>
-    <Grid args={[42, 42]} cellColor="#17324d" sectionColor="#1d5f8f" position={[0, 0.01, 0]} infiniteGrid={false} fadeDistance={34} fadeStrength={1.8} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow><planeGeometry args={[42, 42]} /><meshStandardMaterial color="#08090a" roughness={0.92} metalness={0.03} /></mesh>
+    <Grid args={[42, 42]} cellColor="#1a1c20" sectionColor="#2a2d32" position={[0, 0.01, 0]} infiniteGrid={false} fadeDistance={34} fadeStrength={1.8} />
   </group>;
 }
 
@@ -92,12 +92,12 @@ export function SceneCanvas({ manifest, assets, facilityTree, selectedAssetId, a
   const layout = useMemo(() => buildSceneLayout({ manifest, assets, facilityTree }), [manifest, assets, facilityTree]);
   if (layout.nodes.length === 0) return <EmptyState title="No scene assets" message="This scene has no placeable assets yet." />;
   const alarmByAsset = new Map(alarms.map((alarm) => [alarm.assetId, alarm]));
-  return <div className="relative h-[610px] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#020617] shadow-inner shadow-black">
+  return <div className="relative h-[610px] overflow-hidden rounded-lg border border-hairline bg-canvas">
     <Canvas camera={{ position: [10, 7.5, 11], fov: 45 }} shadows>
-      <color attach="background" args={["#020617"]} />
+      <color attach="background" args={["#010102"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[8, 12, 8]} intensity={1.25} castShadow />
-      <pointLight position={[-6, 6, -6]} intensity={0.35} color="#38bdf8" />
+      <pointLight position={[-6, 6, -6]} intensity={0.35} color="#5e6ad2" />
       <FloorTiles />
       <LayerOverlays layout={layout} activeLayers={activeLayers} />
       {layout.nodes.map((node) => <AssetMesh key={node.assetId} node={node} selected={node.assetId === selectedAssetId} onAssetSelect={onAssetSelect} />)}
@@ -105,10 +105,10 @@ export function SceneCanvas({ manifest, assets, facilityTree, selectedAssetId, a
       <SceneLabels layout={layout} selectedAssetId={selectedAssetId} />
       <ViewpointController viewpoints={viewpoints} />
     </Canvas>
-    <div className="pointer-events-none absolute left-4 top-4 rounded-xl border border-white/[0.08] bg-bg-panel/85 px-3 py-2 font-mono text-[0.7rem] text-text-secondary backdrop-blur">
+    <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-hairline bg-surface-1/85 px-3 py-2 font-mono text-caption text-ink-subtle">
       {layout.nodes.length} assets · {layout.rows.length} rows · {layout.zones.length} zones{layout.thermalGrid.length > 0 ? ` · ${layout.thermalGrid.length} thermal cells` : ''}
     </div>
     <ViewpointButtons viewpoints={viewpoints} />
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-bg-base/80 to-transparent" />
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-canvas/80 to-transparent" />
   </div>;
 }

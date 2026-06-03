@@ -28,9 +28,9 @@ export function LatestMetricCards({ metrics, selectedMetricKey, onSelectMetric }
   return <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{metrics.map((metric) => {
     const thresholdStat = thresholdStatus(metric);
     const qualityText = `Quality: ${qualityLabel(metric.quality)}`;
-    return (<button key={metric.key} type="button" className={`text-left ${selectedMetricKey === metric.key ? 'rounded-xl ring-2 ring-primary' : ''}`} onClick={() => onSelectMetric?.(metric.key)} aria-pressed={selectedMetricKey === metric.key}>
+    return (<button key={metric.key} type="button" className={`text-left rounded-lg transition-shadow ${selectedMetricKey === metric.key ? 'ring-2 ring-primary ring-offset-2 ring-offset-canvas' : ''}`} onClick={() => onSelectMetric?.(metric.key)} aria-pressed={selectedMetricKey === metric.key}>
       <MetricCard label={metric.name} value={metric.value} {...(metric.unit ? { unit: metric.unit } : {})} quality={qualityText} timestamp={formatTime(metric.timestamp)} />
-      {thresholdStat && <p className={`mt-1 px-4 text-xs ${thresholdStat.color}`}>⚠ {thresholdStat.label}</p>}
+      {thresholdStat && <p className={`mt-1 px-4 text-caption ${thresholdStat.color}`}>⚠ {thresholdStat.label}</p>}
     </button>);
   })}</div>;
 }

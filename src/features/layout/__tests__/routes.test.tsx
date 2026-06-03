@@ -41,7 +41,7 @@ describe('command center routes', () => {
     expect(await screen.findByRole('banner')).toHaveTextContent('Twin@P.CN Command Center');
     expect(screen.getByRole('navigation', { name: /primary command/i })).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveTextContent(/3D Digital Twin Workspace/i);
-    expect(screen.getByText(/API http:\/\/localhost:3000\/api\/v1/i)).toBeInTheDocument();
+    expect(screen.getByText(/http:\/\/localhost:3000\/api\/v1/i)).toBeInTheDocument();
     expect(screen.getByText(/Ada Lovelace/i)).toBeInTheDocument();
   });
 

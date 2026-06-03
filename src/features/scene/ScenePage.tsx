@@ -16,7 +16,7 @@ export function ScenePage() {
   const { data: manifest, isLoading: manifestLoading, isError: manifestError, error: manifestErr, refetch: refetchManifest } = useSceneManifestQuery(selectedSceneId);
   const { data: facilityTree } = useFacilityTreeQuery();
   const { data: assets = [], isLoading: assetsLoading } = useAssetsQuery();
-  const { data: alarms = [] } = useAlarmsQuery({ status: 'open' });
+  const { data: alarms = [] } = useAlarmsQuery();
   const { data: viewpoints } = useViewpointsQuery(selectedSceneId);
 
   const sceneAlarms = alarms.filter((alarm): alarm is typeof alarm & { assetId: string } => Boolean(alarm.assetId));
@@ -27,7 +27,7 @@ export function ScenePage() {
   return (
     <Panel title="3D Scene" subtitle="Digital twin workspace">
       {!selectedSceneId ? (
-        <div className="flex items-center justify-center py-16 text-text-muted">Select a scene from the twin controls to begin.</div>
+        <div className="flex items-center justify-center py-16 text-ink-tertiary">Select a scene from the twin controls to begin.</div>
       ) : loading ? (
         <LoadingState label="Loading scene workspace" />
       ) : error ? (

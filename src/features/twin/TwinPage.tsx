@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Panel } from '../../components/ui/Panel';
-import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -71,11 +70,16 @@ function LayerToggles() {
   const active = useViewerStore((state) => state.layers);
   const toggleLayer = useViewerStore((state) => state.toggleLayer);
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {layers.map((layer) => (
-        <Button key={layer} size="sm" variant={active.includes(layer) ? 'primary' : 'secondary'} onClick={() => toggleLayer(layer)}>
+        <button
+          key={layer}
+          type="button"
+          className={`rounded-md px-2.5 py-1 text-caption font-medium transition-colors ${active.includes(layer) ? 'bg-primary text-on-primary' : 'border border-hairline bg-surface-2 text-ink-subtle hover:text-ink-muted'}`}
+          onClick={() => toggleLayer(layer)}
+        >
           {layer}
-        </Button>
+        </button>
       ))}
     </div>
   );
@@ -89,7 +93,7 @@ function Workspace() {
   const selectAlarm = useViewerStore((state) => state.selectAlarm);
   const { data: manifest, isLoading, isError, error, refetch } = useSceneManifestQuery(selectedSceneId);
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError, error: assetsErrorValue, refetch: refetchAssets } = useAssetsQuery();
-  const { data: alarms = [] } = useAlarmsQuery({ status: 'open' });
+  const { data: alarms = [] } = useAlarmsQuery();
   const { data: viewpoints } = useViewpointsQuery(selectedSceneId);
   const sceneAlarms = alarms.filter((alarm): alarm is typeof alarm & { assetId: string } => Boolean(alarm.assetId));
 
@@ -103,13 +107,13 @@ function Workspace() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-6">
         <div>
-          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.34em] text-primary">3D Digital Twin Workspace</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-text-primary">{displayText(manifest.name, selectedSceneId)}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">Procedural command scene generated from manifest positions, asset metadata, and fallback rack layout.</p>
+          <p className="text-eyebrow text-primary">3D Digital Twin Workspace</p>
+          <h1 className="mt-2 text-display-md font-semibold tracking-tight text-ink">{displayText(manifest.name, selectedSceneId)}</h1>
+          <p className="mt-2 max-w-2xl text-body-sm text-ink-muted">Procedural command scene generated from manifest positions, asset metadata, and fallback rack layout.</p>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-right">
-          <p className="text-[0.65rem] uppercase tracking-[0.18em] text-text-muted">Selected asset</p>
-          <p className="mt-1 font-mono text-sm font-semibold text-primary">{displayText(selectedAssetId, 'None')}</p>
+        <div className="rounded-lg border border-hairline bg-surface-2 px-4 py-3 text-right">
+          <p className="text-caption text-ink-tertiary">Selected asset</p>
+          <p className="mt-1 font-mono text-body-sm font-medium text-primary">{displayText(selectedAssetId, 'None')}</p>
         </div>
       </div>
       <SceneCanvas
@@ -129,19 +133,19 @@ function Workspace() {
 export function TwinPage() {
   useTwinDeepLinks();
   return (
-    <div className="grid gap-5 xl:grid-cols-[330px_minmax(680px,1fr)_380px]">
-      <Panel title="Twin controls" subtitle="Scene, facility, assets, layers" className="space-y-5">
+    <div className="grid gap-4 xl:grid-cols-[300px_minmax(680px,1fr)_360px]">
+      <Panel title="Twin Controls" subtitle="Scene, facility, assets, layers" className="space-y-4">
         <SceneSelector />
         <div>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Facility</h3>
+          <h3 className="mb-2 text-eyebrow text-ink-subtle">Facility</h3>
           <FacilityTree />
         </div>
         <div>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Assets</h3>
+          <h3 className="mb-2 text-eyebrow text-ink-subtle">Assets</h3>
           <AssetSearch compact />
         </div>
         <div>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Layers</h3>
+          <h3 className="mb-2 text-eyebrow text-ink-subtle">Layers</h3>
           <LayerToggles />
         </div>
       </Panel>

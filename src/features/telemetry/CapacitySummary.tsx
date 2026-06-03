@@ -23,7 +23,7 @@ export function CapacitySummarySection() {
   const { power, cooling, space } = cap.data;
 
   return <Panel title="Capacity Summary" subtitle="Power, cooling & space utilization">
-    <div className="space-y-5">
+    <div className="space-y-4">
       <ProgressBar value={power.used} max={power.total} label="Power" unit={power.unit} color={capacityColor(power.used, power.total)} />
       <ProgressBar value={cooling.used} max={cooling.total} label="Cooling" unit={cooling.unit} color={capacityColor(cooling.used, cooling.total)} />
       <ProgressBar value={space.used} max={space.total} label="Space" unit={space.unit} color={capacityColor(space.used, space.total)} />

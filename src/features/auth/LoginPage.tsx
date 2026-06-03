@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Button } from '../../components/ui/Button';
 import { apiRequest } from '../../lib/api/client';
 import { normalizeLoginResponse } from '../../lib/api/normalizers';
 import { useAuthStore } from './authStore';
@@ -43,44 +44,44 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-base text-[color:var(--text-primary)]">
-      <section className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-        <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--primary)]">Twin@P.CN</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight">Sign in</h1>
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+    <main className="min-h-screen bg-canvas text-ink">
+      <section className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-12">
+        <p className="text-eyebrow text-primary">Twin@P.CN</p>
+        <h1 className="mt-3 text-headline font-semibold tracking-tight">Sign in</h1>
+        <form className="mt-8 space-y-4" onSubmit={handleSubmit} noValidate>
           <div>
-            <label className="block text-sm font-medium" htmlFor="identifier">Identifier</label>
+            <label className="block text-body-sm font-medium text-ink-muted" htmlFor="identifier">Identifier</label>
             <input
               id="identifier"
               name="identifier"
               autoComplete="username"
-              className="mt-2 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2"
+              className="mt-1.5 w-full rounded-md border border-hairline bg-surface-1 px-3 py-2 text-body-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-primary-focus focus:ring-offset-2 focus:ring-offset-canvas"
               value={identifier}
               onChange={(event) => setIdentifier(event.target.value)}
               aria-invalid={Boolean(errors.identifier)}
               aria-describedby={errors.identifier ? 'identifier-error' : undefined}
             />
-            {errors.identifier ? <p id="identifier-error" className="mt-2 text-sm text-red-400">{errors.identifier}</p> : null}
+            {errors.identifier ? <p id="identifier-error" className="mt-1.5 text-caption text-critical">{errors.identifier}</p> : null}
           </div>
           <div>
-            <label className="block text-sm font-medium" htmlFor="password">Password</label>
+            <label className="block text-body-sm font-medium text-ink-muted" htmlFor="password">Password</label>
             <input
               id="password"
               name="password"
               type="password"
               autoComplete="current-password"
-              className="mt-2 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2"
+              className="mt-1.5 w-full rounded-md border border-hairline bg-surface-1 px-3 py-2 text-body-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-primary-focus focus:ring-offset-2 focus:ring-offset-canvas"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? 'password-error' : undefined}
             />
-            {errors.password ? <p id="password-error" className="mt-2 text-sm text-red-400">{errors.password}</p> : null}
+            {errors.password ? <p id="password-error" className="mt-1.5 text-caption text-critical">{errors.password}</p> : null}
           </div>
-          {message ? <p role="alert" className="text-sm text-red-400">{message}</p> : null}
-          <button className="w-full rounded-lg bg-[color:var(--primary)] px-4 py-2 font-semibold text-black disabled:opacity-60" disabled={loading} type="submit">
+          {message ? <p role="alert" className="text-body-sm text-critical">{message}</p> : null}
+          <Button className="w-full" size="lg" disabled={loading} type="submit">
             {loading ? 'Signing in…' : 'Sign in'}
-          </button>
+          </Button>
         </form>
       </section>
     </main>

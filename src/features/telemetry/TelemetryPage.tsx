@@ -23,14 +23,13 @@ export function TelemetryPage() {
   const trend = useTimeseriesQuery(selectedAssetId, effectiveMetricKey, range);
   const alarms = useAlarmsQuery(selectedAssetId ? { assetId: selectedAssetId } : undefined);
 
-
-  if (!selectedAssetId) return <div className="space-y-5">
+  if (!selectedAssetId) return <div className="space-y-4">
     <Panel title="Telemetry Center" subtitle="Selected-asset signal trends"><EmptyState title="Select an asset" message="Choose an asset from the twin viewer, facility tree, or asset search to inspect telemetry." /></Panel>
     <KpiCardSection />
     <CapacitySummarySection />
   </div>;
 
-  return <div className="space-y-5">
+  return <div className="space-y-4">
     <Panel title="Telemetry Center" subtitle={`Latest metrics for ${selectedAssetId}`} actions={<MetricRangeTabs range={range} onChange={setRange} />}>
       {latest.isLoading ? <LoadingState label="Loading latest metrics" /> : latest.isError ? <ErrorState title="Latest telemetry unavailable" message={latest.error instanceof Error ? latest.error.message : 'Unable to load latest metrics.'} onRetry={() => void latest.refetch()} /> : metrics.length === 0 ? <EmptyState title="No telemetry metrics" message={`No telemetry metrics were returned for ${selectedAssetId}.`} /> : <LatestMetricCards metrics={metrics} selectedMetricKey={effectiveMetricKey} onSelectMetric={setSelectedMetricKey} />}
     </Panel>

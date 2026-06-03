@@ -20,17 +20,15 @@ function badgeProps(alarm: { severity?: string; status?: string }) {
 }
 
 function Field({ label, value }: { label: string; value: unknown }) {
-  return <div className="rounded-lg border border-border-subtle bg-bg-surface p-3"><dt className="text-xs uppercase tracking-wide text-text-muted">{label}</dt><dd className="mt-1 text-sm font-medium text-text-primary">{displayText(value)}</dd></div>;
+  return <div className="rounded-md border border-hairline bg-surface-2 p-3"><dt className="text-caption text-ink-tertiary">{label}</dt><dd className="mt-1 text-body-sm font-medium text-ink">{displayText(value)}</dd></div>;
 }
 
 function isAckable(state?: string) { return state === 'new' || state === 'open'; }
 function isResolvable(state?: string) { return state !== 'resolved' && state !== 'closed' && state !== 'auto_cleared'; }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section role="region" aria-label={title} className="rounded-xl border border-border-subtle bg-bg-panel p-4"><h3 className="mb-3 text-sm font-semibold text-text-primary">{title}</h3>{children}</section>;
+  return <section role="region" aria-label={title} className="rounded-lg border border-hairline bg-surface-1 p-4"><h3 className="mb-3 text-body-sm font-medium text-ink">{title}</h3>{children}</section>;
 }
-
-// ── Action buttons ──
 
 type ABProps = { alarmId: string; state: string | undefined; onStateChange: () => void };
 
@@ -53,16 +51,16 @@ function ActionButtons({ alarmId, state, onStateChange }: ABProps) {
         <Button variant="secondary" size="sm" disabled={ak.isPending || !isAckable(state)} onClick={onAck}>{ak.isPending ? 'Ack…' : 'Acknowledge'}</Button>
         <div className="relative">
           <Button variant="secondary" size="sm" disabled={as.isPending} onClick={() => setAo(!ao)}>{as.isPending ? 'Assign…' : 'Assign'}</Button>
-          {ao && users && <div className="absolute left-0 top-full z-50 mt-1 max-h-48 w-56 overflow-y-auto rounded-lg border border-border-strong bg-bg-elevated p-1 shadow-lg">
-            {users.length === 0 && <p className="p-2 text-xs text-text-muted">No users</p>}
-            {users.map((u) => <button key={u.id} type="button" className="w-full rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-bg-surface" onClick={() => onAssign(u.id)}>{u.name}</button>)}
+          {ao && users && <div className="absolute left-0 top-full z-50 mt-1 max-h-48 w-56 overflow-y-auto rounded-md border border-hairline-strong bg-surface-3 p-1">
+            {users.length === 0 && <p className="p-2 text-caption text-ink-tertiary">No users</p>}
+            {users.map((u) => <button key={u.id} type="button" className="w-full rounded-md px-3 py-2 text-left text-body-sm text-ink hover:bg-surface-2" onClick={() => onAssign(u.id)}>{u.name}</button>)}
           </div>}
         </div>
         <div className="relative">
           <Button variant="danger" size="sm" disabled={rv.isPending || !isResolvable(state)} onClick={() => setRo(true)}>{rv.isPending ? 'Resolve…' : 'Resolve'}</Button>
-          {ro && <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-border-strong bg-bg-elevated p-3 shadow-lg">
-            <label className="text-xs font-medium text-text-secondary">Resolution note</label>
-            <textarea className="mt-1 w-full rounded-md border border-border-subtle bg-bg-surface p-2 text-sm text-text-primary placeholder:text-text-muted" rows={3} placeholder="Describe…" value={res} onChange={(e) => setRes(e.target.value)} autoFocus />
+          {ro && <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-md border border-hairline-strong bg-surface-3 p-3">
+            <label className="text-caption font-medium text-ink-muted">Resolution note</label>
+            <textarea className="mt-1 w-full rounded-md border border-hairline bg-surface-2 p-2 text-body-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-primary-focus" rows={3} placeholder="Describe…" value={res} onChange={(e) => setRes(e.target.value)} autoFocus />
             <div className="mt-2 flex gap-2">
               <Button variant="danger" size="sm" disabled={!res.trim() || rv.isPending} onClick={onResolve}>Confirm</Button>
               <Button variant="ghost" size="sm" onClick={() => setRo(false)}>Cancel</Button>
@@ -70,14 +68,12 @@ function ActionButtons({ alarmId, state, onStateChange }: ABProps) {
           </div>}
         </div>
       </div>
-      {ak.isError && <p className="mt-2 text-xs text-critical">{(ak.error as Error)?.message}</p>}
-      {as.isError && <p className="mt-2 text-xs text-critical">{(as.error as Error)?.message}</p>}
-      {rv.isError && <p className="mt-2 text-xs text-critical">{(rv.error as Error)?.message}</p>}
+      {ak.isError && <p className="mt-2 text-caption text-critical">{(ak.error as Error)?.message}</p>}
+      {as.isError && <p className="mt-2 text-caption text-critical">{(as.error as Error)?.message}</p>}
+      {rv.isError && <p className="mt-2 text-caption text-critical">{(rv.error as Error)?.message}</p>}
     </Section>
   );
 }
-
-// ── Timeline ──
 
 const EV_LABELS: Record<string, string> = {
   acknowledged: 'Acknowledged', ack: 'Acknowledged', assigned: 'Assigned',
@@ -103,24 +99,22 @@ function TimelineSection({ alarmId }: { alarmId: string }) {
         return (
         <li key={ev.id || i} className="flex gap-3 pb-4 last:pb-0">
           <div className="flex flex-col items-center">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-bg-surface text-xs" aria-hidden="true">{eIcon(ev.eventType)}</span>
-            {i < tl.length - 1 && <div className="mt-1 w-px flex-1 bg-border-subtle" />}
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-2 text-caption text-ink-subtle" aria-hidden="true">{eIcon(ev.eventType)}</span>
+            {i < tl.length - 1 && <div className="mt-1 w-px flex-1 bg-hairline" />}
           </div>
           <div className="min-w-0 flex-1 pt-0.5">
-            <p className="text-sm font-medium text-text-primary">{eLabel(ev.eventType)}</p>
-            <p className="mt-0.5 text-xs text-text-muted">
+            <p className="text-body-sm font-medium text-ink">{eLabel(ev.eventType)}</p>
+            <p className="mt-0.5 text-caption text-ink-tertiary">
               {ev.occurredAt ? new Date(ev.occurredAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : ''}
               {ev.actorId && ` by ${ev.actorId}`}
             </p>
-            {payloadText && <p className="mt-1 text-xs text-text-secondary">{payloadText}</p>}
+            {payloadText && <p className="mt-1 text-caption text-ink-muted">{payloadText}</p>}
           </div>
         </li>);
       })}</ol>
     </Section>
   );
 }
-
-// ── Nearest cameras ──
 
 function CamerasSection({ alarmId }: { alarmId: string }) {
   const { data: cams, isLoading, isError, error, refetch } = useNearestCamerasQuery(alarmId);
@@ -131,11 +125,11 @@ function CamerasSection({ alarmId }: { alarmId: string }) {
 
   return (
     <Section title={`Nearest cameras (${cams.length})`}>
-      <div className="space-y-2">{cams.map((cam) => (
-        <div key={cam.cameraId} className="flex items-center justify-between rounded-lg border border-border-subtle bg-bg-surface p-3">
+      <div className="space-y-1.5">{cams.map((cam) => (
+        <div key={cam.cameraId} className="flex items-center justify-between rounded-md border border-hairline bg-surface-2 p-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-text-primary">{cam.name}</p>
-            <p className="text-xs text-text-muted">Coverage: {cam.coveragePct}%</p>
+            <p className="text-body-sm font-medium text-ink">{cam.name}</p>
+            <p className="text-caption text-ink-tertiary">Coverage: {cam.coveragePct}%</p>
           </div>
           {cam.streamUrl && <Button variant="ghost" size="sm" onClick={() => window.open(cam.streamUrl, '_blank', 'noopener')}>View</Button>}
         </div>
@@ -143,8 +137,6 @@ function CamerasSection({ alarmId }: { alarmId: string }) {
     </Section>
   );
 }
-
-// ── SOP ──
 
 function SopSection({ alarmId }: { alarmId: string }) {
   const { data: sop, isLoading, isError, error, refetch } = useSopQuery(alarmId);
@@ -155,18 +147,18 @@ function SopSection({ alarmId }: { alarmId: string }) {
 
   return (
     <Section title={`SOP: ${sop.sop.title}`}>
-      {sop.sop.summary && <p className="mb-3 text-sm text-text-secondary">{sop.sop.summary}</p>}
-      <ol className="space-y-3">{sop.steps.map((step) => (
-        <li key={step.stepNumber} className="rounded-lg border border-border-subtle bg-bg-surface p-3">
+      {sop.sop.summary && <p className="mb-3 text-body-sm text-ink-muted">{sop.sop.summary}</p>}
+      <ol className="space-y-2">{sop.steps.map((step) => (
+        <li key={step.stepNumber} className="rounded-md border border-hairline bg-surface-2 p-3">
           <div className="flex items-start gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">{step.stepNumber}</span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-muted text-caption font-medium text-primary">{step.stepNumber}</span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-text-primary">{step.instruction}</p>
-              <div className="mt-1 flex flex-wrap gap-2 text-xs text-text-muted">
+              <p className="text-body-sm font-medium text-ink">{step.instruction}</p>
+              <div className="mt-1 flex flex-wrap gap-2 text-caption text-ink-tertiary">
                 {step.estimatedMinutes != null && <span>⏱ {step.estimatedMinutes} min</span>}
                 {step.requiresRole && <span>🔒 {step.requiresRole}</span>}
               </div>
-              {step.expectedOutcome && <p className="mt-1 text-xs text-text-secondary">→ {step.expectedOutcome}</p>}
+              {step.expectedOutcome && <p className="mt-1 text-caption text-ink-muted">→ {step.expectedOutcome}</p>}
             </div>
           </div>
         </li>
@@ -174,8 +166,6 @@ function SopSection({ alarmId }: { alarmId: string }) {
     </Section>
   );
 }
-
-// ── Main component ──
 
 export function AlarmDetail({ alarmId }: { alarmId?: string | null }) {
   const { data: alarm, isLoading, isError, error, refetch } = useAlarmQuery(alarmId);
@@ -189,18 +179,18 @@ export function AlarmDetail({ alarmId }: { alarmId?: string | null }) {
       <div>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-primary">Alarm detail</p>
-            <h2 className="mt-2 text-xl font-semibold text-text-primary">{displayText(alarm.title, alarm.id)}</h2>
+            <p className="text-eyebrow text-primary">Alarm Detail</p>
+            <h2 className="mt-2 text-card-title font-medium text-ink">{displayText(alarm.title, alarm.id)}</h2>
           </div>
           <StatusBadge {...badgeProps(alarm)} />
         </div>
-        {alarm.description && <p className="mt-3 text-sm text-text-secondary">{alarm.description}</p>}
-        {alarm.message && !alarm.description && <p className="mt-3 text-sm text-text-secondary">{alarm.message}</p>}
+        {alarm.description && <p className="mt-3 text-body-sm text-ink-muted">{alarm.description}</p>}
+        {alarm.message && !alarm.description && <p className="mt-3 text-body-sm text-ink-muted">{alarm.message}</p>}
       </div>
 
       <ActionButtons alarmId={alarm.id} state={alarm.status} onStateChange={() => void refetch()} />
 
-      <dl className="grid gap-3 sm:grid-cols-2">
+      <dl className="grid gap-2 sm:grid-cols-2">
         <Field label="Asset" value={alarm.assetId} />
         <Field label="Status" value={alarm.status} />
         <Field label="Raised" value={alarm.raisedAt} />
@@ -222,4 +212,3 @@ export function AlarmDetail({ alarmId }: { alarmId?: string | null }) {
     </article>
   );
 }
-
