@@ -7,7 +7,7 @@ type AlarmFiltersProps = {
 };
 
 const severities = ['', 'critical', 'warning', 'info'];
-const statuses = ['', 'open', 'acknowledged', 'resolved'];
+const statuses = ['', 'new', 'acked', 'resolved'];
 
 function nextFilters(filters: AlarmFilterValues, key: 'severity' | 'status', value: string): AlarmFilterValues {
   const next: AlarmFilterValues = { ...filters };
