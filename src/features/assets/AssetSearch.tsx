@@ -41,7 +41,7 @@ export function AssetSearch({ onSelect, compact }: AssetSearchProps) {
             <button
               key={asset.id}
               type="button"
-              className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
+              className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors duration-150 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
               onClick={() => { selectAsset(asset.id); onSelect?.(asset); }}
             >
               <span className="min-w-0">

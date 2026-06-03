@@ -28,7 +28,7 @@ export function AlarmList({ alarms, selectedAlarmId, onSelect }: AlarmListProps)
         <button
           type="button"
           aria-pressed={alarm.id === selectedAlarmId}
-          className={`w-full rounded-md border p-3 text-left transition-colors ${alarm.id === selectedAlarmId ? 'border-primary bg-surface-2' : 'border-hairline bg-surface-1 hover:bg-surface-2'}`}
+          className={`w-full cursor-pointer rounded-md border p-3 text-left transition-all duration-150 ${alarm.id === selectedAlarmId ? 'border-primary bg-surface-2' : 'border-hairline bg-surface-1 hover:bg-surface-2 hover:border-hairline-strong'}`}
           onClick={() => onSelect(alarm.id)}
         >
           <div className="flex items-start justify-between gap-3">

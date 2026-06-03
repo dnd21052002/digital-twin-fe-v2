@@ -10,11 +10,11 @@ export type PanelProps = {
 
 export function Panel({ title, subtitle, actions, children, className = '' }: PanelProps) {
   return (
-    <section className={`rounded-lg border border-hairline bg-surface-1 p-5 ${className}`}>
+    <section className={`rounded-lg border border-hairline bg-surface-1 p-5 transition-colors ${className}`}>
       {(title || subtitle || actions) && (
         <div className="mb-4 flex items-start justify-between gap-4 border-b border-hairline pb-4">
           <div>
-            {title && <h2 className="text-eyebrow font-medium uppercase tracking-wider text-ink">{title}</h2>}
+            {title && <h2 className="text-eyebrow font-medium uppercase tracking-wider text-ink-muted">{title}</h2>}
             {subtitle && <p className="mt-1 text-caption text-ink-subtle">{subtitle}</p>}
           </div>
           {actions && <div className="shrink-0">{actions}</div>}

@@ -4,9 +4,15 @@ export type LoadingStateProps = {
 
 export function LoadingState({ label = 'Loading' }: LoadingStateProps) {
   return (
-    <div role="status" aria-live="polite" className="flex items-center justify-center gap-3 rounded-lg border border-hairline bg-surface-1 p-6 text-body-sm text-ink-muted">
-      <span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-      <span>{label}</span>
+    <div role="status" aria-live="polite" className="space-y-3 rounded-lg border border-hairline bg-surface-1 p-5">
+      <div className="flex items-center gap-3">
+        <div className="skeleton h-3 w-3 rounded-full" />
+        <span className="text-body-sm text-ink-muted">{label}</span>
+      </div>
+      <div className="space-y-2">
+        <div className="skeleton h-3 w-3/4 rounded" />
+        <div className="skeleton h-3 w-1/2 rounded" />
+      </div>
     </div>
   );
 }

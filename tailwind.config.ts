@@ -33,7 +33,7 @@ export default {
       fontFamily: {
         display: ['Inter', 'SF Pro Display', '-apple-system', 'system-ui', 'sans-serif'],
         text: ['Inter', '-apple-system', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
+        mono: ['Fira Code', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       fontSize: {
         'display-xl': ['80px', { lineHeight: '1.05', fontWeight: '600', letterSpacing: '-3.0px' }],
