@@ -37,7 +37,7 @@ const TONE_CLASSES: Record<StatusTone, string> = {
   warning: 'border-warning/40 bg-warning/10 text-warning',
   success: 'border-success/40 bg-success/10 text-success',
   maintenance: 'border-maintenance/40 bg-maintenance/10 text-maintenance',
-  unknown: 'border-unknown/40 bg-unknown/10 text-text-secondary',
+  unknown: 'border-unknown/40 bg-unknown/10 text-ink-muted',
 };
 
 const SEVERITY_LABELS: Record<Severity, string> = {

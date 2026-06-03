@@ -1,16 +1,16 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 const variants = {
-  primary: 'border-primary/60 bg-primary text-bg-base hover:bg-primary/90',
-  secondary: 'border-border-strong bg-bg-elevated text-text-primary hover:border-primary/60',
-  ghost: 'border-transparent bg-transparent text-text-secondary hover:bg-bg-elevated hover:text-text-primary',
-  danger: 'border-critical/60 bg-critical text-white hover:bg-critical/90',
+  primary: 'bg-primary text-on-primary hover:bg-primary-hover',
+  secondary: 'border border-hairline bg-surface-1 text-ink hover:bg-surface-2 hover:border-hairline-strong',
+  ghost: 'text-ink-muted hover:bg-surface-1 hover:text-ink',
+  danger: 'bg-critical text-on-primary hover:bg-critical/90',
 } as const;
 
 const sizes = {
-  sm: 'h-8 px-3 text-xs',
-  md: 'h-10 px-4 text-sm',
-  lg: 'h-12 px-5 text-base',
+  sm: 'h-8 px-3 text-body-sm',
+  md: 'h-9 px-3.5 text-button',
+  lg: 'h-10 px-4 text-button',
 } as const;
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -24,7 +24,7 @@ export function Button({ variant = 'secondary', size = 'md', iconOnly, className
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 rounded-md border font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:cursor-not-allowed disabled:opacity-50 ${sizes[size]} ${iconOnly ? 'aspect-square px-0' : ''} ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 ${sizes[size]} ${iconOnly ? 'aspect-square px-0' : ''} ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

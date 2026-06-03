@@ -1,24 +1,37 @@
 :root {
-  --bg-base: #020617;
-  --bg-page: #050A12;
-  --bg-surface: #08111F;
-  --bg-elevated: #0D1828;
-  --bg-panel: #0B1524;
-  --bg-panel-soft: rgba(11, 21, 36, 0.74);
+  /* Linear-inspired canvas & surfaces */
+  --canvas: #010102;
+  --surface-1: #0f1011;
+  --surface-2: #141516;
+  --surface-3: #18191a;
+  --surface-4: #191a1b;
 
-  --border-subtle: #1E2B3D;
-  --border-strong: #2B3D52;
-  --border-accent: rgba(20, 184, 255, 0.34);
+  /* Hairline borders */
+  --hairline: #23252a;
+  --hairline-strong: #34343a;
+  --hairline-tertiary: #3e3e44;
 
-  --text-primary: #E6EEF8;
-  --text-secondary: #9AAFC4;
-  --text-muted: #637A91;
+  /* Text hierarchy */
+  --ink: #f7f8f8;
+  --ink-muted: #d0d6e0;
+  --ink-subtle: #8a8f98;
+  --ink-tertiary: #62666d;
 
-  --primary: #14B8FF;
-  --primary-muted: rgba(20, 184, 255, 0.12);
-  --success: #00C896;
-  --warning: #F59E0B;
-  --critical: #EF4444;
-  --maintenance: #8B5CF6;
-  --unknown: #64748B;
+  /* Brand accent — lavender-blue (scarce) */
+  --primary: #5e6ad2;
+  --primary-hover: #828fff;
+  --primary-focus: #5e69d1;
+  --primary-muted: rgba(94, 106, 210, 0.12);
+  --on-primary: #ffffff;
+
+  /* Semantic — minimal palette */
+  --success: #27a644;
+  --warning: #d4a017;
+  --critical: #e04040;
+  --maintenance: #7a7fad;
+  --unknown: #62666d;
+
+  /* Inverse */
+  --inverse-canvas: #ffffff;
+  --inverse-ink: #000000;
 }

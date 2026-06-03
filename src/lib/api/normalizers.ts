@@ -1,15 +1,23 @@
 import type {
+  AlarmEvent,
   AlarmSummary,
   AssetDetail,
   AssetSummary,
+  CapacitySummary,
   FacilityNode,
+  KpiData,
   LatestMetricsResponse,
   LoginResponse,
   MetricPoint,
+  NearestCamera,
   SceneAssetNode,
   SceneManifest,
   SceneSummary,
+  SopDocument,
+  SopResponse,
+  SopStep,
   User,
+  Viewpoint,
 } from './types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -190,6 +198,21 @@ export function normalizeLatestMetrics(value: unknown): LatestMetricsResponse {
   return { metrics, raw: value };
 }
 
+export function normalizeViewpoint(value: unknown): Viewpoint {
+  const record = isRecord(value) ? value : {};
+  const id = firstString(record, ['id', 'viewpointId', 'vp_id'], 'vp');
+  const name = firstString(record, ['name', 'title', 'label'], id);
+  const rawPos = Array.isArray(record.position) ? (record.position as number[]) : isRecord(record.position) ? [Number((record.position as Record<string, unknown>).x) || 0, Number((record.position as Record<string, unknown>).y) || 0, Number((record.position as Record<string, unknown>).z) || 0] : [0, 3, 5];
+  const position: [number, number, number] = [rawPos[0] ?? 0, rawPos[1] ?? 3, rawPos[2] ?? 5];
+  const rawTarget = Array.isArray(record.target) ? (record.target as number[]) : isRecord(record.target) ? [Number((record.target as Record<string, unknown>).x) || 0, Number((record.target as Record<string, unknown>).y) || 0, Number((record.target as Record<string, unknown>).z) || 0] : undefined;
+  const target: [number, number, number] | undefined = rawTarget ? [rawTarget[0] ?? 0, rawTarget[1] ?? 0, rawTarget[2] ?? 0] : undefined;
+  const viewpoint: Viewpoint = { id, name, position, raw: value };
+  if (target) viewpoint.target = target;
+  const category = firstString(record, ['category', 'type', 'kind']);
+  if (category) viewpoint.category = category;
+  return viewpoint;
+}
+
 export function normalizeTimeseries(value: unknown) {
   const series = normalizeList<unknown>(isRecord(value) && 'series' in value ? value.series : value).map<MetricPoint>((point, index) => {
     const record = isRecord(point) ? point : {};
@@ -200,4 +223,126 @@ export function normalizeTimeseries(value: unknown) {
     return metric;
   });
   return { series, raw: value };
+}
+
+export function normalizeAlarmEvent(value: unknown): AlarmEvent {
+  const record = isRecord(value) ? value : {};
+  const id = firstString(record, ['id', 'eventId', 'event_id'], 'evt');
+  const event: AlarmEvent = { id, occurredAt: firstString(record, ['occurredAt', 'occurred_at', 'timestamp', 'ts']), actorId: null, eventType: firstString(record, ['eventType', 'event_type', 'type']), payload: null, raw: value };
+  const actorId = firstString(record, ['actorId', 'actor_id']);
+  if (actorId) event.actorId = actorId;
+  if ('payload' in record) event.payload = record.payload;
+  return event;
+}
+
+export function normalizeNearestCamera(value: unknown): NearestCamera {
+  const record = isRecord(value) ? value : {};
+  return {
+    cameraId: firstString(record, ['cameraId', 'camera_id', 'id']),
+    name: firstString(record, ['name', 'displayName', 'display_name', 'title'], 'Camera'),
+    streamUrl: firstString(record, ['streamUrl', 'stream_url', 'url']),
+    coveragePct: typeof record.coveragePct === 'number' ? record.coveragePct : typeof record.coverage_pct === 'number' ? record.coverage_pct : 0,
+    priority: typeof record.priority === 'number' ? record.priority : 0,
+    raw: value,
+  };
+}
+
+export function normalizeSopDocument(value: unknown): SopDocument {
+  const record = isRecord(value) ? value : {};
+  return {
+    id: firstString(record, ['id', 'sopId', 'sop_id', 'documentId'], 'sop'),
+    code: firstString(record, ['code']),
+    title: firstString(record, ['title', 'name'], 'SOP'),
+    summary: firstString(record, ['summary', 'description']) || null,
+    raw: value,
+  };
+}
+
+export function normalizeSopStep(value: unknown): SopStep {
+  const record = isRecord(value) ? value : {};
+  return {
+    stepNumber: typeof record.stepNumber === 'number' ? record.stepNumber : typeof record.step_number === 'number' ? record.step_number : 0,
+    instruction: firstString(record, ['instruction', 'description', 'text'], ''),
+    expectedOutcome: firstString(record, ['expectedOutcome', 'expected_outcome']) || null,
+    requiresRole: firstString(record, ['requiresRole', 'requires_role']) || null,
+    estimatedMinutes: typeof record.estimatedMinutes === 'number' ? record.estimatedMinutes : typeof record.estimated_minutes === 'number' ? record.estimated_minutes : null,
+    raw: value,
+  };
+}
+
+export function normalizeSopResponse(value: unknown): SopResponse {
+  const record = isRecord(value) ? value : {};
+  const sopInput = record.sop ?? record.document ?? record;
+  const stepsInput = record.steps ?? record.items ?? [];
+  return {
+    sop: normalizeSopDocument(sopInput),
+    steps: normalizeList(stepsInput).map(normalizeSopStep),
+    raw: value,
+  };
+}
+
+function firstNumber(source: Record<string, unknown>, keys: string[], fallback = 0): number {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return fallback;
+}
+
+export function normalizeCapacityItem(value: unknown) {
+  const record = isRecord(value) ? value : {};
+  return {
+    used: firstNumber(record, ['used', 'usedVal', 'consumed'], 0),
+    total: firstNumber(record, ['total', 'totalVal', 'capacity'], 0),
+    unit: firstString(record, ['unit', 'uom'], ''),
+  };
+}
+
+export function normalizeCapacitySummary(value: unknown): CapacitySummary {
+  const record = isRecord(value) ? value : {};
+  return {
+    power: isRecord(record.power) ? normalizeCapacityItem(record.power) : { used: 0, total: 0, unit: 'kW' },
+    cooling: isRecord(record.cooling) ? normalizeCapacityItem(record.cooling) : { used: 0, total: 0, unit: 'kW' },
+    space: isRecord(record.space) ? normalizeCapacityItem(record.space) : { used: 0, total: 0, unit: 'm²' },
+    raw: value,
+  };
+}
+
+function normalizeSparkline(value: unknown): { timestamp: string; value: number }[] {
+  const items = normalizeList(value);
+  return items.map((item) => {
+    const record = isRecord(item) ? item : {};
+    return {
+      timestamp: firstString(record, ['timestamp', 'time', 'ts'], ''),
+      value: firstNumber(record, ['value', 'val'], 0),
+    };
+  });
+}
+
+export function normalizeKpiData(value: unknown): KpiData {
+  const record = isRecord(value) ? value : {};
+  const id = firstString(record, ['key', 'id', 'kpiKey', 'metric'], 'kpi');
+  const statusStr = firstString(record, ['status', 'state']);
+  const status: KpiData['status'] =
+    statusStr === 'good' || statusStr === 'warning' || statusStr === 'critical' ? statusStr : undefined;
+  const kpi: KpiData = {
+    key: id,
+    name: firstString(record, ['name', 'label', 'title'], id),
+    value: firstNumber(record, ['value', 'val'], 0),
+    unit: firstString(record, ['unit', 'uom'], ''),
+    target: firstNumber(record, ['target', 'targetVal', 'goal'], 0),
+    raw: value,
+  };
+  if (status) kpi.status = status;
+  const sparkline = record.sparkline ?? record.history ?? record.trend ?? record.points;
+  if (sparkline) kpi.sparkline = normalizeSparkline(sparkline);
+  return kpi;
+}
+
+export function normalizeKpiList(value: unknown): KpiData[] {
+  return normalizeList(value).map(normalizeKpiData);
 }

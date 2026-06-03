@@ -76,18 +76,18 @@ export function Drawer({ open, onClose, title, children }: DrawerProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/70" onMouseDown={onClose}>
       <aside
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="drawer-title"
         tabIndex={-1}
-        className="h-full w-full max-w-xl overflow-y-auto border-l border-border-strong bg-bg-panel p-6 shadow-2xl"
+        className="h-full w-full max-w-xl overflow-y-auto border-l border-hairline bg-surface-1 p-6"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="mb-5 flex items-center justify-between gap-4">
-          <h2 id="drawer-title" className="text-lg font-semibold text-text-primary">{title}</h2>
+          <h2 id="drawer-title" className="text-headline font-semibold text-ink">{title}</h2>
           <Button variant="ghost" size="sm" iconOnly aria-label="Close drawer" onClick={onClose}>×</Button>
         </header>
         {children}

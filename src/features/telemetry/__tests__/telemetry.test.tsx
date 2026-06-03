@@ -26,7 +26,12 @@ describe('TelemetryPage', () => {
 
   it('shows an empty telemetry state when selected asset has no latest metrics', async () => {
     useViewerStore.setState({ selectedAssetId: 'rack-7' });
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ assetId: 'rack-7', items: [] }), { headers: { 'Content-Type': 'application/json' } })));
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/kpis/latest')) return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } });
+      if (url.includes('/capacity/summary')) return new Response(JSON.stringify({ power: { used: 0, total: 0, unit: 'kW' }, cooling: { used: 0, total: 0, unit: 'kW' }, space: { used: 0, total: 0, unit: 'm²' } }), { headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ assetId: 'rack-7', items: [] }), { headers: { 'Content-Type': 'application/json' } });
+    }));
 
     renderWithQuery(<TelemetryPage />);
 
@@ -40,6 +45,12 @@ describe('TelemetryPage', () => {
       const url = String(input);
       if (url.includes('/timeseries')) {
         return new Response(JSON.stringify({ assetId: 'rack-7', metricKey: 'temperature', unit: '°C', points: [] }), { headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/kpis/latest')) {
+        return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/capacity/summary')) {
+        return new Response(JSON.stringify({ power: { used: 120, total: 250, unit: 'kW' }, cooling: { used: 80, total: 200, unit: 'kW' }, space: { used: 30, total: 100, unit: 'm²' } }), { headers: { 'Content-Type': 'application/json' } });
       }
       return new Response(JSON.stringify({ assetId: 'rack-7', data: [
         { key: 'temperature', name: 'Temperature', value: 27.5, unit: '°C', quality: 0, timestamp: '2026-06-02T10:00:00Z' },

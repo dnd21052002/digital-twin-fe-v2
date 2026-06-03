@@ -17,14 +17,14 @@ export function AlarmsPage() {
   const effectiveSelectedAlarmId = selectedAlarm?.id ?? null;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
+    <div className="grid gap-4 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
       <Panel title="Alarms" subtitle="Incident triage queue" className="space-y-4">
         <AlarmFilters filters={filters} onChange={setFilters} />
         {isLoading && <LoadingState label="Loading alarms" />}
         {isError && <ErrorState title="Alarms unavailable" message={error instanceof Error ? error.message : 'Unable to load alarms.'} onRetry={() => void refetch()} />}
         {!isLoading && !isError && <AlarmList alarms={alarms} selectedAlarmId={effectiveSelectedAlarmId} onSelect={setSelectedAlarmId} />}
       </Panel>
-      <Panel title="Alarm command detail" subtitle="Triage, ownership, related context">
+      <Panel title="Alarm Detail" subtitle="Triage, ownership, related context">
         <AlarmDetail alarmId={effectiveSelectedAlarmId} />
       </Panel>
     </div>

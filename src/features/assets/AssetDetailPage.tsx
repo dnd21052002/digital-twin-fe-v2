@@ -11,9 +11,9 @@ import { useAssetQuery } from '../twin/queries';
 
 function Field({ label, value }: { label: string; value: unknown }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-surface p-4">
-      <dt className="text-xs uppercase tracking-wide text-text-muted">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-text-primary">{displayText(value)}</dd>
+    <div className="rounded-md border border-hairline bg-surface-2 p-4">
+      <dt className="text-caption text-ink-tertiary">{label}</dt>
+      <dd className="mt-1 text-body-sm font-medium text-ink">{displayText(value)}</dd>
     </div>
   );
 }
@@ -24,9 +24,9 @@ export function AssetDetailPage() {
 
   return (
     <Panel
-      title="Asset detail"
+      title="Asset Detail"
       subtitle={assetId ? `Asset ${assetId}` : 'Selected asset workspace'}
-      actions={assetId ? <Link to={`/twin?assetId=${encodeURIComponent(assetId)}`}><Button>Open in twin</Button></Link> : null}
+      actions={assetId ? <Link to={`/twin?assetId=${encodeURIComponent(assetId)}`}><Button>Open in Twin</Button></Link> : null}
     >
       {!assetId ? <EmptyState title="No asset selected" message="Open an asset from the registry." /> : null}
       {assetId && isLoading ? <LoadingState label="Loading asset" /> : null}
@@ -35,8 +35,8 @@ export function AssetDetailPage() {
       {asset ? (
         <div className="space-y-5">
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">{displayText(asset.name, asset.id)}</h1>
-            <p className="mt-1 text-text-secondary">{displayText(asset.tag, asset.id)}</p>
+            <h1 className="text-headline font-semibold text-ink">{displayText(asset.name, asset.id)}</h1>
+            <p className="mt-1 text-body-sm text-ink-muted">{displayText(asset.tag, asset.id)}</p>
             <div className="mt-3"><StatusBadge status={asset.status} /></div>
           </div>
           <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

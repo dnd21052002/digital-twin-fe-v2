@@ -10,5 +10,5 @@ export type StatusBadgeProps = {
 export function StatusBadge({ status, severity, state, label }: StatusBadgeProps) {
   const meta = severity ? severityMeta(severity) : statusMeta(status);
   const text = label ?? (state ? alarmStateLabel(state) : meta.label);
-  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${meta.className}`}>{text}</span>;
+  return <span className={`inline-flex items-center rounded-pill border px-2.5 py-0.5 text-caption font-medium ${meta.className}`}>{text}</span>;
 }

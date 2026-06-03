@@ -94,3 +94,84 @@ export interface TimeseriesResponse {
   series: MetricPoint[];
   raw?: unknown;
 }
+
+export interface Viewpoint {
+  id: string;
+  name: string;
+  position: [number, number, number];
+  target?: [number, number, number];
+  category?: string;
+  raw?: unknown;
+}
+
+export interface AlarmEvent {
+  id: string;
+  occurredAt: string;
+  actorId: string | null;
+  eventType: string;
+  payload: unknown;
+  raw?: unknown;
+}
+
+export interface NearestCamera {
+  cameraId: string;
+  name: string;
+  streamUrl: string;
+  coveragePct: number;
+  priority: number;
+  raw?: unknown;
+}
+
+export interface SopDocument {
+  id: string;
+  code: string;
+  title: string;
+  summary: string | null;
+  raw?: unknown;
+}
+
+export interface SopStep {
+  stepNumber: number;
+  instruction: string;
+  expectedOutcome: string | null;
+  requiresRole: string | null;
+  estimatedMinutes: number | null;
+  raw?: unknown;
+}
+
+export interface SopResponse {
+  sop: SopDocument;
+  steps: SopStep[];
+  raw?: unknown;
+}
+
+export interface MetricThreshold {
+  warnHigh?: number | undefined;
+  critHigh?: number | undefined;
+  warnLow?: number | undefined;
+  critLow?: number | undefined;
+}
+
+export interface KpiData {
+  key: string;
+  name: string;
+  value: number;
+  unit: string;
+  target: number;
+  status?: 'good' | 'warning' | 'critical';
+  sparkline?: { timestamp: string; value: number }[];
+  raw?: unknown;
+}
+
+export interface CapacityItem {
+  used: number;
+  total: number;
+  unit: string;
+}
+
+export interface CapacitySummary {
+  power: CapacityItem;
+  cooling: CapacityItem;
+  space: CapacityItem;
+  raw?: unknown;
+}

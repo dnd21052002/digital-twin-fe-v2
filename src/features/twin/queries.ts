@@ -8,8 +8,9 @@ import {
   normalizeList,
   normalizeSceneManifest,
   normalizeSceneSummary,
+  normalizeViewpoint,
 } from '../../lib/api/normalizers';
-import type { AssetDetail, AssetSummary, FacilityNode, SceneManifest, SceneSummary } from '../../lib/api/types';
+import type { AssetDetail, AssetSummary, FacilityNode, SceneManifest, SceneSummary, Viewpoint } from '../../lib/api/types';
 
 function unwrapData(value: unknown): unknown {
   if (typeof value === 'object' && value !== null && 'data' in value) return (value as Record<string, unknown>).data;
@@ -35,6 +36,14 @@ export function useSceneManifestQuery(sceneId: string | null | undefined) {
     queryKey: ['scenes', sceneId, 'manifest'],
     queryFn: async () => normalizeSceneManifest(unwrapData(await apiRequest<unknown>(`/scenes/${sceneId}/manifest`))),
     enabled: Boolean(sceneId),
+  });
+}
+
+export function useViewpointsQuery(sceneId: string | null | undefined) {
+  return useQuery<Viewpoint[]>({
+    queryKey: ['viewpoints', sceneId],
+    queryFn: async () => normalizeList(await apiRequest<unknown>(`/viewpoints${sceneId ? `?sceneId=${sceneId}` : ''}`)).map(normalizeViewpoint),
+    enabled: true,
   });
 }
 

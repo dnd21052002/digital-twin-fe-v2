@@ -7,7 +7,7 @@ type AlarmFiltersProps = {
 };
 
 const severities = ['', 'critical', 'warning', 'info'];
-const statuses = ['', 'open', 'acknowledged', 'resolved'];
+const statuses = ['', 'new', 'acked', 'resolved'];
 
 function nextFilters(filters: AlarmFilterValues, key: 'severity' | 'status', value: string): AlarmFilterValues {
   const next: AlarmFilterValues = { ...filters };
@@ -25,15 +25,15 @@ function clearFilters(filters: AlarmFilterValues): AlarmFilterValues {
 export function AlarmFilters({ filters, onChange }: AlarmFiltersProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      <label className="text-sm text-text-secondary">
+      <label className="text-body-sm text-ink-muted">
         Severity
-        <select className="mt-1 w-full rounded-md border border-border-subtle bg-bg-surface px-3 py-2 text-text-primary" value={filters.severity ?? ''} onChange={(event) => onChange(nextFilters(filters, 'severity', event.target.value))}>
+        <select className="mt-1 w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-body-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary-focus" value={filters.severity ?? ''} onChange={(event) => onChange(nextFilters(filters, 'severity', event.target.value))}>
           {severities.map((value) => <option key={value || 'all'} value={value}>{value || 'All severities'}</option>)}
         </select>
       </label>
-      <label className="text-sm text-text-secondary">
+      <label className="text-body-sm text-ink-muted">
         Status
-        <select className="mt-1 w-full rounded-md border border-border-subtle bg-bg-surface px-3 py-2 text-text-primary" value={filters.status ?? ''} onChange={(event) => onChange(nextFilters(filters, 'status', event.target.value))}>
+        <select className="mt-1 w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-body-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary-focus" value={filters.status ?? ''} onChange={(event) => onChange(nextFilters(filters, 'status', event.target.value))}>
           {statuses.map((value) => <option key={value || 'all'} value={value}>{value || 'All statuses'}</option>)}
         </select>
       </label>

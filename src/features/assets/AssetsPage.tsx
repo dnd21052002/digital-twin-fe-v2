@@ -22,14 +22,14 @@ export function AssetsPage() {
   }, [data, filter]);
 
   return (
-    <div className="space-y-5">
-      <Panel title="Asset search" subtitle="Search by tag, name, category">
+    <div className="space-y-4">
+      <Panel title="Asset Search" subtitle="Search by tag, name, category">
         <AssetSearch />
       </Panel>
       <Panel title="Assets" subtitle="Asset registry">
         <div className="mb-4">
           <input
-            className="w-full rounded-md border border-border-subtle bg-bg-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+            className="w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-body-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-primary-focus"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
             placeholder="Filter by tag, name, category, status"
@@ -44,11 +44,11 @@ export function AssetsPage() {
             rows={filtered as Array<AssetSummary & Record<string, unknown>>}
             getRowKey={(asset) => asset.id}
             columns={[
-              { key: 'tag', header: 'Tag', accessor: 'tag', render: (value, row) => <Link className="text-primary hover:underline" to={`/assets/${row.id}`}>{displayText(value, row.id)}</Link> },
+              { key: 'tag', header: 'Tag', accessor: 'tag', render: (value, row) => <Link className="text-primary hover:text-primary-hover transition-colors" to={`/assets/${row.id}`}>{displayText(value, row.id)}</Link> },
               { key: 'name', header: 'Name', accessor: 'name' },
               { key: 'category', header: 'Category', accessor: 'category' },
               { key: 'status', header: 'Status', accessor: 'status', render: (value) => <StatusBadge status={value} /> },
-              { key: 'twin', header: 'Twin', accessor: 'id', render: (value) => <Link className="text-primary hover:underline" to={`/twin?assetId=${encodeURIComponent(String(value))}`}>Open in Twin</Link> },
+              { key: 'twin', header: 'Twin', accessor: 'id', render: (value) => <Link className="text-primary hover:text-primary-hover transition-colors" to={`/twin?assetId=${encodeURIComponent(String(value))}`}>Open in Twin</Link> },
             ]}
           />
         ) : null}

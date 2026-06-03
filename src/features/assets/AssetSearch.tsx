@@ -25,9 +25,9 @@ export function AssetSearch({ onSelect, compact }: AssetSearchProps) {
   if (isError) return <ErrorState title="Assets unavailable" message={error instanceof Error ? error.message : 'Unable to load assets.'} onRetry={() => void refetch()} />;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <input
-        className="w-full rounded-xl border border-white/[0.08] bg-bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-[color:var(--border-accent)] focus:ring-2 focus:ring-primary/20"
+        className="w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-body-sm text-ink outline-none placeholder:text-ink-tertiary focus:ring-2 focus:ring-primary-focus focus:ring-offset-2 focus:ring-offset-canvas"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search tag, name, category"
@@ -36,17 +36,17 @@ export function AssetSearch({ onSelect, compact }: AssetSearchProps) {
       {filtered.length === 0 ? (
         <EmptyState title="No matching assets" message="Try a different tag, name, or category." />
       ) : (
-        <div className={compact ? 'max-h-[19rem] space-y-1.5 overflow-auto pr-1' : 'space-y-2'}>
+        <div className={compact ? 'max-h-[19rem] space-y-0.5 overflow-auto' : 'space-y-1'}>
           {filtered.map((asset) => (
             <button
               key={asset.id}
               type="button"
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-white/[0.02] px-3 py-2.5 text-left transition hover:border-white/[0.08] hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
               onClick={() => { selectAsset(asset.id); onSelect?.(asset); }}
             >
               <span className="min-w-0">
-                <span className="block truncate font-mono text-xs font-semibold text-text-primary">{displayText(asset.tag ?? asset.name, asset.id)}</span>
-                <span className="mt-0.5 block truncate text-xs text-text-secondary">{displayText(asset.name)} · {displayText(asset.category)}</span>
+                <span className="block truncate font-mono text-caption font-medium text-ink">{displayText(asset.tag ?? asset.name, asset.id)}</span>
+                <span className="mt-0.5 block truncate text-caption text-ink-subtle">{displayText(asset.name)} · {displayText(asset.category)}</span>
               </span>
               <StatusBadge status={asset.status} />
             </button>
