@@ -9,9 +9,9 @@ const manifest = (assets: SceneManifest['assets']): SceneManifest => ({
   assets,
 });
 
-const asset = (id: string, raw: Record<string, unknown> = {}, category = 'rack'): AssetSummary => ({
+const asset = (id: string, raw: Record<string, unknown> = {}, category = 'rack', name?: string): AssetSummary => ({
   id,
-  name: id.toUpperCase(),
+  name: name ?? id.toUpperCase(),
   category,
   status: 'online',
   raw: { id, ...raw },
@@ -38,34 +38,77 @@ describe('buildSceneLayout', () => {
     });
   });
 
-  it('groups rackPosition assets into deterministic rows', () => {
+  it('nests server assets inside their parent rack at RU positions', () => {
     const layout = buildSceneLayout({
       manifest: manifest([]),
       assets: [
-        asset('a2', { rackPosition: 'R2-U01', row: 'R2' }),
-        asset('a1', { rackPosition: 'R1-U01', row: 'R1' }),
-        asset('a3', { rackPosition: 'R1-U02', row: 'R1' }),
+        asset('RACK-050', { row: 'A' }, 'rack', 'RACK-050'),
+        asset('RACK-050-SRV-02', {}, 'server', 'Server 2 in RACK-050'),
+        asset('RACK-050-SRV-19', {}, 'server', 'Server 19 in RACK-050'),
       ],
     });
 
-    expect(layout.rows.map((row) => row.label)).toEqual(['R1', 'R2']);
-    expect(layout.nodes.map((node) => [node.assetId, node.rowLabel])).toEqual([
-      ['a1', 'R1'],
-      ['a3', 'R1'],
-      ['a2', 'R2'],
-    ]);
-    expect(layout.nodes.find((node) => node.assetId === 'a3')?.position[0]).toBeGreaterThan(
-      layout.nodes.find((node) => node.assetId === 'a1')?.position[0] ?? 0,
-    );
+    const rack = layout.nodes.find((n) => n.assetId === 'RACK-050');
+    const srv02 = layout.nodes.find((n) => n.assetId === 'RACK-050-SRV-02');
+    const srv19 = layout.nodes.find((n) => n.assetId === 'RACK-050-SRV-19');
+
+    expect(rack).toBeDefined();
+    expect(srv02?.parentRackId).toBe('RACK-050');
+    expect(srv19?.parentRackId).toBe('RACK-050');
+    expect(srv02?.position[1]).toBeGreaterThan(0);
+    expect(srv19?.position[1]).toBeGreaterThan(srv02!.position[1]);
+    expect(srv02?.ruPosition).toBe(2);
+    expect(srv19?.ruPosition).toBe(19);
   });
 
-  it('places assets without location in the Unplaced zone', () => {
+  it('places multiple racks in a 2-row cold/hot aisle pattern', () => {
+    const racks = Array.from({ length: 10 }, (_, i) =>
+      asset(`RACK-${String(i + 1).padStart(3, '0')}`, { row: 'A' }, 'rack', `RACK-${String(i + 1).padStart(3, '0')}`),
+    );
+    const layout = buildSceneLayout({
+      manifest: manifest([]),
+      assets: racks,
+    });
+
+    const placedRacks = layout.nodes.filter((n) => n.category === 'rack');
+    expect(placedRacks).toHaveLength(10);
+
+    const coldRacks = placedRacks.filter((r) => r.aisleLabel === 'Cold');
+    const hotRacks = placedRacks.filter((r) => r.aisleLabel === 'Hot');
+    expect(coldRacks.length).toBeGreaterThan(0);
+    expect(hotRacks.length).toBeGreaterThan(0);
+
+    const coldZ = coldRacks[0]!.position[2];
+    const hotZ = hotRacks[0]!.position[2];
+    expect(Math.abs(coldZ - hotZ)).toBeGreaterThan(1);
+  });
+
+  it('places standalone cooling/UPS assets in their own category rows', () => {
+    const layout = buildSceneLayout({
+      manifest: manifest([]),
+      assets: [
+        asset('RACK-001', {}, 'rack'),
+        asset('COOL-01', {}, 'cooling', 'CRAC 01'),
+        asset('UPS-01', {}, 'ups', 'Battery Bank'),
+      ],
+    });
+
+    const cool = layout.nodes.find((n) => n.assetId === 'COOL-01');
+    const ups = layout.nodes.find((n) => n.assetId === 'UPS-01');
+    expect(cool?.category).toBe('cooling');
+    expect(ups?.category).toBe('ups');
+    expect(cool?.position[2]).not.toBe(ups?.position[2]);
+  });
+
+  it('places standalone assets in a dedicated category row', () => {
     const layout = buildSceneLayout({
       manifest: manifest([]),
       assets: [asset('loose-1', {}, 'sensor')],
     });
 
-    expect(layout.zones.map((zone) => zone.label)).toContain('Unplaced');
-    expect(layout.nodes[0]).toMatchObject({ assetId: 'loose-1', zoneLabel: 'Unplaced', rowLabel: 'Unplaced' });
+    const looseNode = layout.nodes.find((n) => n.assetId === 'loose-1');
+    expect(looseNode).toBeDefined();
+    expect(looseNode?.category).toBe('sensor');
+    expect(looseNode?.rowLabel).toContain('sensor');
   });
 });

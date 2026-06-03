@@ -2,7 +2,7 @@ import { displayText } from '../../lib/display';
 import type { AssetSummary, FacilityNode, SceneManifest } from '../../lib/api/types';
 
 export type SceneVec3 = [number, number, number];
-export type SceneNode = { assetId: string; label: string; category: string; status?: string | undefined; position: SceneVec3; rotation?: SceneVec3 | undefined; scale?: SceneVec3 | undefined; zoneLabel: string; rowLabel: string; aisleLabel?: string | undefined };
+export type SceneNode = { assetId: string; label: string; category: string; status?: string | undefined; position: SceneVec3; rotation?: SceneVec3 | undefined; scale?: SceneVec3 | undefined; zoneLabel: string; rowLabel: string; aisleLabel?: string | undefined; parentRackId?: string | undefined; ruPosition?: number | undefined };
 export type SceneZone = { label: string; position: SceneVec3; size: SceneVec3; aisleA?: string | undefined; aisleB?: string | undefined };
 export type SceneRow = { label: string; zoneLabel: string; position: SceneVec3; assetIds: string[]; aisleLabel?: string | undefined };
 export type SceneBounds = { min: SceneVec3; max: SceneVec3; center: SceneVec3; size: SceneVec3 };
@@ -10,9 +10,13 @@ export type SceneLayout = { nodes: SceneNode[]; zones: SceneZone[]; rows: SceneR
 export type SceneThermalCell = { x: number; z: number; heat: number; zoneLabel: string };
 export type BuildSceneLayoutInput = { manifest?: SceneManifest | null | undefined; assets: AssetSummary[]; facilityTree?: FacilityNode[] | undefined };
 type Recordish = Record<string, unknown>;
-const SEP = '::row::';
-const AISLE_LABELS = ['Cold', 'Hot'];
-const DEFAULT_BOUNDS: SceneBounds = { min: [-8, 0, -8], max: [8, 0, 8], center: [0, 0, 0], size: [16, 0, 16] };
+
+const RACK_WIDTH = 1.15;
+const AISLE_WIDTH = 2.4;
+const RACK_GAP = 0.3;
+const RACKS_PER_ROW = 8;
+const RU_HEIGHT = 0.28;
+
 function isRecord(value: unknown): value is Recordish { return typeof value === 'object' && value !== null; }
 function stringField(record: Recordish, keys: string[]): string { for (const key of keys) { const value = record[key]; if (typeof value === 'string' && value.trim()) return value.trim(); if (typeof value === 'number') return String(value); if (isRecord(value)) { const nested = stringField(value, ['label', 'name', 'title', 'id', 'code']); if (nested) return nested; } } return ''; }
 function vec3(value: unknown): SceneVec3 | undefined { if (Array.isArray(value) && value.length >= 3) { const parsed = value.slice(0, 3).map(Number); if (parsed.every(Number.isFinite)) return parsed as SceneVec3; } if (isRecord(value)) { const parsed = [Number(value.x), Number(value.y), Number(value.z)]; if (parsed.every(Number.isFinite)) return parsed as SceneVec3; } return undefined; }
@@ -20,11 +24,69 @@ function manifestRawPosition(raw: unknown): SceneVec3 | undefined { if (!isRecor
 function manifestRawRotation(raw: unknown): SceneVec3 | undefined { return isRecord(raw) ? vec3(raw.rotation) : undefined; }
 function manifestRawScale(raw: unknown): SceneVec3 | undefined { return isRecord(raw) ? vec3(raw.scale) : undefined; }
 function assetRaw(asset: AssetSummary): Recordish { return isRecord(asset.raw) ? asset.raw : {}; }
-function locationFromAsset(asset: AssetSummary): { zoneLabel: string; rowLabel: string; hasLocation: boolean } { const raw = assetRaw(asset); const rack = stringField(raw, ['rackPosition', 'rack_position', 'rackSlot', 'rack_slot']); const row = stringField(raw, ['row', 'rowLabel', 'row_label', 'aisle']); const rackName = stringField(raw, ['rack']); const location = stringField(raw, ['location', 'site', 'area', 'zone', 'room']); if (rack || rackName || row) return { zoneLabel: location || 'Data Hall', rowLabel: row || rackName || rack.split('-')[0] || 'Rack Row', hasLocation: true }; if (location) return { zoneLabel: location, rowLabel: location, hasLocation: true }; return { zoneLabel: 'Unplaced', rowLabel: 'Unplaced', hasLocation: false }; }
+
+/** Extract parent rack id from child asset name (e.g. RACK-050-SRV-02 → RACK-050) */
+function parentRackId(asset: AssetSummary): string | undefined {
+  const raw = assetRaw(asset);
+  const explicit = stringField(raw, ['parentRack', 'parent_rack', 'parentId', 'parent_id', 'rackId', 'rack_id']);
+  if (explicit) return explicit;
+  const candidates = [asset.tag, asset.id, asset.name];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const match = candidate.match(/^(RACK[-_]?\d+)/i);
+    if (match?.[1]) return match[1].toUpperCase().replace(/[-_]/g, '-');
+  }
+  return undefined;
+}
+
+function isRackCategory(category: string): boolean {
+  const key = category.toLowerCase();
+  return key.includes('rack') || key.includes('cabinet') || key.includes('enclosure');
+}
+
+/** Parse RU number from asset name (e.g. SRV-02, SRV-19) */
+function parseRuPosition(asset: AssetSummary): number {
+  const raw = assetRaw(asset);
+  const explicit = Number(stringField(raw, ['ru', 'ruPosition', 'ru_position', 'slot', 'position']));
+  if (Number.isFinite(explicit) && explicit > 0) return explicit;
+  const candidates = [asset.id, asset.tag, asset.name];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const match = candidate.match(/(?:SRV|BLADE|SERVER|UNIT|U)[-_ ]?(\d+)/i);
+    if (match?.[1]) {
+      const n = Number(match[1]);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+  }
+  return 1;
+}
+
+function locationFromAsset(asset: AssetSummary): { zoneLabel: string; rowLabel: string; hasLocation: boolean } {
+  const raw = assetRaw(asset);
+  const row = stringField(raw, ['row', 'rowLabel', 'row_label', 'aisle']);
+  const location = stringField(raw, ['location', 'site', 'area', 'zone', 'room']);
+  if (row) return { zoneLabel: location || 'Data Hall', rowLabel: row, hasLocation: true };
+  if (location) return { zoneLabel: location, rowLabel: location, hasLocation: true };
+  return { zoneLabel: 'Unplaced', rowLabel: 'Unplaced', hasLocation: false };
+}
+
 function zoneSort(label: string): string { return label === 'Unplaced' ? 'zzzzzz-unplaced' : label.toLowerCase(); }
-function buildBounds(nodes: SceneNode[]): SceneBounds { if (nodes.length === 0) return DEFAULT_BOUNDS; const min: SceneVec3 = [Infinity, 0, Infinity]; const max: SceneVec3 = [-Infinity, 0, -Infinity]; for (const node of nodes) { min[0] = Math.min(min[0], node.position[0] - 1.5); min[2] = Math.min(min[2], node.position[2] - 1.5); max[0] = Math.max(max[0], node.position[0] + 1.5); max[2] = Math.max(max[2], node.position[2] + 1.5); } const size: SceneVec3 = [Math.max(12, max[0] - min[0]), 0, Math.max(12, max[2] - min[2])]; const center: SceneVec3 = [(min[0] + max[0]) / 2, 0, (min[2] + max[2]) / 2]; return { min, max, center, size }; }
-function splitKey(key: string): [string, string] { const parts = key.split(SEP); return [parts[0] ?? 'Data Hall', parts[1] ?? 'Row']; }
-/** Extract facility-derived zone/row names from facility tree */
+
+function buildBounds(nodes: SceneNode[]): SceneBounds {
+  if (nodes.length === 0) return { min: [-8, 0, -8], max: [8, 0, 8], center: [0, 0, 0], size: [16, 0, 16] };
+  const min: SceneVec3 = [Infinity, 0, Infinity];
+  const max: SceneVec3 = [-Infinity, 0, -Infinity];
+  for (const node of nodes) {
+    min[0] = Math.min(min[0], node.position[0] - 1.5);
+    min[2] = Math.min(min[2], node.position[2] - 1.5);
+    max[0] = Math.max(max[0], node.position[0] + 1.5);
+    max[2] = Math.max(max[2], node.position[2] + 1.5);
+  }
+  const size: SceneVec3 = [Math.max(12, max[0] - min[0]), 0, Math.max(12, max[2] - min[2])];
+  const center: SceneVec3 = [(min[0] + max[0]) / 2, 0, (min[2] + max[2]) / 2];
+  return { min, max, center, size };
+}
+
 function facilityRows(facilityTree?: FacilityNode[]): Map<string, string[]> {
   const result = new Map<string, string[]>();
   if (!facilityTree) return result;
@@ -45,7 +107,7 @@ function facilityRows(facilityTree?: FacilityNode[]): Map<string, string[]> {
   walk(facilityTree, 'Data Hall');
   return result;
 }
-/** Build synthetic thermal grid from zone bounds */
+
 function buildThermalGrid(zones: SceneZone[]): SceneThermalCell[] {
   const cells: SceneThermalCell[] = [];
   for (const zone of zones) {
@@ -66,51 +128,197 @@ function buildThermalGrid(zones: SceneZone[]): SceneThermalCell[] {
   }
   return cells;
 }
+
 export function buildSceneLayout({ manifest, assets, facilityTree }: BuildSceneLayoutInput): SceneLayout {
-  const assetById = new Map(assets.map((asset) => [asset.id, asset])); const nodes: SceneNode[] = []; const placedIds = new Set<string>();
-  // Phase 1: manifest-placed assets
-  for (const manifestAsset of manifest?.assets ?? []) { const position = manifestRawPosition(manifestAsset.raw); if (!position) continue; const asset = assetById.get(manifestAsset.id); const loc = asset ? locationFromAsset(asset) : { zoneLabel: 'Manifest', rowLabel: 'Manifest', hasLocation: true }; const node: SceneNode = { assetId: manifestAsset.id, label: displayText(asset?.name ?? manifestAsset.raw, manifestAsset.id), category: asset?.category ?? manifestAsset.category ?? manifestAsset.type ?? 'unknown', status: asset?.status, position, zoneLabel: loc.zoneLabel, rowLabel: loc.rowLabel }; const rotation = manifestRawRotation(manifestAsset.raw); const scale = manifestRawScale(manifestAsset.raw); if (rotation) node.rotation = rotation; if (scale) node.scale = scale; nodes.push(node); placedIds.add(manifestAsset.id); }
-  // Phase 2: facility-driven grouping for unplaced assets
+  const assetById = new Map(assets.map((asset) => [asset.id, asset]));
+  const nodes: SceneNode[] = [];
+  const placedIds = new Set<string>();
+  const rackPositions = new Map<string, SceneVec3>();
+
+  // Phase 1: manifest-placed assets (use positions directly)
+  for (const manifestAsset of manifest?.assets ?? []) {
+    const position = manifestRawPosition(manifestAsset.raw);
+    if (!position) continue;
+    const asset = assetById.get(manifestAsset.id);
+    const loc = asset ? locationFromAsset(asset) : { zoneLabel: 'Manifest', rowLabel: 'Manifest', hasLocation: true };
+    const node: SceneNode = {
+      assetId: manifestAsset.id,
+      label: displayText(asset?.name ?? manifestAsset.raw, manifestAsset.id),
+      category: asset?.category ?? manifestAsset.category ?? manifestAsset.type ?? 'unknown',
+      status: asset?.status,
+      position,
+      zoneLabel: loc.zoneLabel,
+      rowLabel: loc.rowLabel,
+    };
+    const rotation = manifestRawRotation(manifestAsset.raw);
+    const scale = manifestRawScale(manifestAsset.raw);
+    if (rotation) node.rotation = rotation;
+    if (scale) node.scale = scale;
+    nodes.push(node);
+    placedIds.add(manifestAsset.id);
+    if (asset && isRackCategory(asset.category ?? '')) {
+      rackPositions.set(manifestAsset.id, position);
+    }
+  }
+
+  // Phase 2: separate racks from non-rack assets
+  const unplacedAssets = assets.filter((a) => !placedIds.has(a.id));
+  const rackAssets = unplacedAssets.filter((a) => isRackCategory(a.category ?? ''));
+  const nonRackAssets = unplacedAssets.filter((a) => !isRackCategory(a.category ?? ''));
+
+  // Group racks by zone
   const facilityRowMap = facilityRows(facilityTree);
-  const groups = new Map<string, AssetSummary[]>();
-  for (const asset of assets.filter((a) => !placedIds.has(a.id)).sort((a, b) => a.id.localeCompare(b.id))) {
-    const loc = locationFromAsset(asset);
-    let zoneLabel = loc.zoneLabel;
-    let rowLabel = loc.rowLabel;
+  const racksByZone = new Map<string, AssetSummary[]>();
+  for (const rack of rackAssets) {
+    const loc = locationFromAsset(rack);
+    let zone = loc.zoneLabel;
     if (!loc.hasLocation && facilityRowMap.size > 0) {
       const firstEntry = [...facilityRowMap.entries()][0];
-      if (firstEntry) {
-        zoneLabel = firstEntry[0];
-        rowLabel = firstEntry[1][0] ?? 'Row A';
-      }
+      if (firstEntry) zone = firstEntry[0];
     }
-    const key = `${zoneLabel}${SEP}${rowLabel}`;
-    groups.set(key, [...(groups.get(key) ?? []), asset]);
+    if (zone === 'Unplaced' && facilityRowMap.size > 0) {
+      const firstEntry = [...facilityRowMap.entries()][0];
+      if (firstEntry) zone = firstEntry[0];
+    }
+    if (zone === 'Unplaced') zone = 'Data Hall';
+    const list = racksByZone.get(zone) ?? [];
+    list.push(rack);
+    racksByZone.set(zone, list);
   }
-  // Merge facility-derived rows that have no assets yet
-  for (const [zone, rows] of facilityRowMap) {
-    for (const row of rows) {
-      const key = `${zone}${SEP}${row}`;
-      if (!groups.has(key)) groups.set(key, []);
+
+  // Place racks in grid: 2 rows per zone, separated by aisle, racks side-by-side
+  for (const [zoneLabel, zoneRacks] of racksByZone) {
+    const sorted = [...zoneRacks].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+    const rackCount = sorted.length;
+    const totalRackRowWidth = rackCount * (RACK_WIDTH + RACK_GAP);
+    const startX = -totalRackRowWidth / 2 + RACK_WIDTH / 2;
+
+    // Split racks into 2 rows (cold/hot aisle pair)
+    for (const [i, rack] of sorted.entries()) {
+      const isColdRow = Math.floor(i / RACKS_PER_ROW) % 2 === 0;
+      const rowPos = Math.floor(i / RACKS_PER_ROW);
+      const indexInRow = i % RACKS_PER_ROW;
+      const x = startX + indexInRow * (RACK_WIDTH + RACK_GAP);
+      const z = isColdRow ? -AISLE_WIDTH / 2 : AISLE_WIDTH / 2;
+      const position: SceneVec3 = [x, 0, z];
+      const rowLabel = `Row ${String.fromCharCode(65 + rowPos)}`;
+      const aisleLabel = isColdRow ? 'Cold' : 'Hot';
+
+      nodes.push({
+        assetId: rack.id,
+        label: displayText(rack.name, rack.id),
+        category: rack.category ?? 'rack',
+        status: rack.status,
+        position,
+        zoneLabel,
+        rowLabel,
+        aisleLabel,
+      });
+      rackPositions.set(rack.id, position);
+      placedIds.add(rack.id);
     }
   }
-  const groupKeys = [...groups.keys()].sort((a, b) => { const [az, ar] = splitKey(a); const [bz, br] = splitKey(b); return zoneSort(az).localeCompare(zoneSort(bz)) || ar.localeCompare(br); });
-  groupKeys.forEach((key, groupIndex) => { const [zoneLabel, rowLabel] = splitKey(key); const rowZ = groupIndex * 4 - Math.max(0, groupKeys.length - 1) * 2; const sorted = (groups.get(key) ?? []).sort((a, b) => { const ar = stringField(assetRaw(a), ['rackPosition', 'rack_position', 'rack', 'location']) || a.id; const br = stringField(assetRaw(b), ['rackPosition', 'rack_position', 'rack', 'location']) || b.id; return ar.localeCompare(br, undefined, { numeric: true }) || a.id.localeCompare(b.id); }); sorted.forEach((asset, index) => nodes.push({ assetId: asset.id, label: displayText(asset.name, asset.id), category: asset.category ?? 'unknown', status: asset.status, position: [(index - (sorted.length - 1) / 2) * 2.4, 0, rowZ], zoneLabel, rowLabel })); });
-  // Build rows with aisle labels (alternating cold/hot)
-  const rows: SceneRow[] = []; const rowZoneIndex = new Map<string, number>();
-  for (const key of groupKeys) {
-    const [zoneLabel, rowLabel] = splitKey(key);
-    const rowNodes = nodes.filter((node) => node.zoneLabel === zoneLabel && node.rowLabel === rowLabel);
-    const zoneKey = zoneLabel;
-    const idx = rowZoneIndex.get(zoneKey) ?? 0;
-    rowZoneIndex.set(zoneKey, idx + 1);
-    const aisleLabel = AISLE_LABELS[idx % 2];
-    rows.push({ label: rowLabel, zoneLabel, position: rowNodes[0]?.position ?? [0, 0, 0], assetIds: rowNodes.map((node) => node.assetId), aisleLabel });
-    for (const node of rowNodes) node.aisleLabel = aisleLabel;
+
+  // Place non-rack assets:
+  // - If has parentRackId AND parent is placed → nest inside rack at RU position
+  // - Otherwise → place in last unplaced row
+  const standaloneAssets: AssetSummary[] = [];
+  for (const asset of nonRackAssets) {
+    const parent = parentRackId(asset);
+    if (parent && rackPositions.has(parent)) {
+      const rackPos = rackPositions.get(parent)!;
+      const ru = parseRuPosition(asset);
+      const yOffset = 0.3 + (ru - 1) * RU_HEIGHT + RU_HEIGHT / 2;
+      // Find parent rack's row/zone
+      const parentNode = nodes.find((n) => n.assetId === parent);
+      nodes.push({
+        assetId: asset.id,
+        label: displayText(asset.name, asset.id),
+        category: asset.category ?? 'unknown',
+        status: asset.status,
+        position: [rackPos[0], yOffset, rackPos[2] + 0.52],
+        zoneLabel: parentNode?.zoneLabel ?? 'Data Hall',
+        rowLabel: parentNode?.rowLabel ?? 'Rack',
+        aisleLabel: parentNode?.aisleLabel,
+        parentRackId: parent,
+        ruPosition: ru,
+      });
+      placedIds.add(asset.id);
+    } else {
+      standaloneAssets.push(asset);
+    }
   }
-  for (const node of nodes) if (!rows.some((row) => row.label === node.rowLabel && row.zoneLabel === node.zoneLabel)) { const aisleLabel = AISLE_LABELS[0]; rows.push({ label: node.rowLabel, zoneLabel: node.zoneLabel, position: node.position, assetIds: [node.assetId], aisleLabel }); node.aisleLabel = aisleLabel; }
+
+  // Place standalone (cooling, UPS, sensors, etc.) in dedicated rows
+  if (standaloneAssets.length > 0) {
+    const grouped = new Map<string, AssetSummary[]>();
+    for (const asset of standaloneAssets) {
+      const loc = locationFromAsset(asset);
+      let zone = loc.zoneLabel;
+      if (zone === 'Unplaced') zone = 'Data Hall';
+      const key = `${zone}::${asset.category ?? 'other'}`;
+      const list = grouped.get(key) ?? [];
+      list.push(asset);
+      grouped.set(key, list);
+    }
+    let standaloneZ = 8;
+    for (const [key, items] of grouped) {
+      const [zoneLabel = 'Data Hall', category = 'other'] = key.split('::');
+      const sorted = [...items].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+      const totalWidth = sorted.length * (RACK_WIDTH + RACK_GAP);
+      const startX = -totalWidth / 2 + RACK_WIDTH / 2;
+      sorted.forEach((asset, i) => {
+        nodes.push({
+          assetId: asset.id,
+          label: displayText(asset.name, asset.id),
+          category: asset.category ?? category,
+          status: asset.status,
+          position: [startX + i * (RACK_WIDTH + RACK_GAP), 0, standaloneZ],
+          zoneLabel,
+          rowLabel: `${category} row`,
+          aisleLabel: 'Perimeter',
+        });
+        placedIds.add(asset.id);
+      });
+      standaloneZ += AISLE_WIDTH;
+    }
+  }
+
+  // Build rows from nodes
+  const rowGroups = new Map<string, SceneNode[]>();
+  for (const node of nodes) {
+    const key = `${node.zoneLabel}::${node.rowLabel}`;
+    const list = rowGroups.get(key) ?? [];
+    list.push(node);
+    rowGroups.set(key, list);
+  }
+  const rows: SceneRow[] = [];
+  for (const [key, rowNodes] of rowGroups) {
+    const [zoneLabel = 'Data Hall', rowLabel = 'Row'] = key.split('::');
+    const positions = rowNodes.map((n) => n.position);
+    const centerX = positions.reduce((s, p) => s + p[0], 0) / positions.length;
+    const centerZ = positions.reduce((s, p) => s + p[2], 0) / positions.length;
+    const aisleLabel = rowNodes[0]?.aisleLabel ?? 'Cold';
+    rows.push({
+      label: rowLabel,
+      zoneLabel,
+      position: [centerX, 0, centerZ],
+      assetIds: rowNodes.map((n) => n.assetId),
+      aisleLabel,
+    });
+  }
   rows.sort((a, b) => zoneSort(a.zoneLabel).localeCompare(zoneSort(b.zoneLabel)) || a.label.localeCompare(b.label));
-  const zones = [...new Set(nodes.map((node) => node.zoneLabel))].sort((a, b) => zoneSort(a).localeCompare(zoneSort(b))).map<SceneZone>((label) => { const bounds = buildBounds(nodes.filter((node) => node.zoneLabel === label)); const zoneRows = rows.filter((r) => r.zoneLabel === label); const aisleA = zoneRows.find((r) => r.aisleLabel === 'Cold')?.label; const aisleB = zoneRows.find((r) => r.aisleLabel === 'Hot')?.label; return { label, position: bounds.center, size: [bounds.size[0] + 2, 0, bounds.size[2] + 2], aisleA, aisleB }; });
+
+  // Build zones
+  const zoneLabels = [...new Set(nodes.map((n) => n.zoneLabel))].sort((a, b) => zoneSort(a).localeCompare(zoneSort(b)));
+  const zones = zoneLabels.map<SceneZone>((label) => {
+    const bounds = buildBounds(nodes.filter((n) => n.zoneLabel === label));
+    const zoneRows = rows.filter((r) => r.zoneLabel === label);
+    const aisleA = zoneRows.find((r) => r.aisleLabel === 'Cold')?.label;
+    const aisleB = zoneRows.find((r) => r.aisleLabel === 'Hot')?.label;
+    return { label, position: bounds.center, size: [bounds.size[0] + 4, 0, bounds.size[2] + 4], aisleA, aisleB };
+  });
+
   const thermalGrid = buildThermalGrid(zones);
   return { nodes, zones, rows, bounds: buildBounds(nodes), thermalGrid };
 }
